@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Nimit Limbachiya - Cysec & Motorsports Engineer" />
+  <meta name="description" content="Nimit Limbachiya" />
   <title>Nimit Limbachiya</title>
   <style>
 :root {
@@ -16,7 +16,6 @@
   --line: rgba(164, 190, 214, 0.18);
   --cyan: #5ee7ff;
   --green: #a7ff83;
-  --steel: #8996a8;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
 }
 
@@ -29,6 +28,8 @@ html {
 }
 
 body {
+  --mx: 50%;
+  --my: 20%;
   margin: 0;
   min-height: 100vh;
   background:
@@ -37,8 +38,6 @@ body {
     linear-gradient(135deg, #06080d 0%, #0c1119 46%, #05070b 100%);
   color: var(--text);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mx: 50%;
-  --my: 20%;
 }
 
 body::before {
@@ -122,21 +121,6 @@ a {
   border-color: rgba(94, 231, 255, 0.38);
 }
 
-.eyebrow,
-.section-kicker {
-  margin: 0 0 18px;
-  color: var(--green);
-  font-size: clamp(0.9rem, 1.22vw, 1.04rem);
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.section-kicker {
-  font-size: 0.78rem;
-}
-
 h1,
 h2,
 h3,
@@ -146,8 +130,8 @@ p {
 
 h1 {
   max-width: none;
-  margin-bottom: 32px;
-  font-size: clamp(2.7rem, 4.55vw, 4.55rem);
+  margin-bottom: 24px;
+  font-size: clamp(2.9rem, 5.1vw, 5rem);
   line-height: 1;
   letter-spacing: 0;
   white-space: nowrap;
@@ -157,7 +141,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: -12px 0 24px;
+  margin: 0 0 24px;
 }
 
 .identity-strip span {
@@ -197,9 +181,9 @@ h1 {
 }
 
 .social-dock a {
+  position: relative;
   width: 58px;
   padding: 0;
-  position: relative;
   overflow: hidden;
 }
 
@@ -228,7 +212,6 @@ h1 {
   color: #f4fff6;
   cursor: pointer;
   font-family: inherit;
-  align-items: center;
   text-align: center;
 }
 
@@ -269,15 +252,6 @@ h1 {
   pointer-events: none;
 }
 
-.photo-wrap:hover {
-  border-color: rgba(167, 255, 131, 0.34);
-}
-
-.photo-wrap:hover img {
-  filter: contrast(1.1) saturate(1.02);
-  transform: scale(1.025);
-}
-
 .photo-wrap::after {
   content: "NIMIT";
   position: absolute;
@@ -288,6 +262,15 @@ h1 {
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.24em;
+}
+
+.photo-wrap:hover {
+  border-color: rgba(167, 255, 131, 0.34);
+}
+
+.photo-wrap:hover img {
+  filter: contrast(1.1) saturate(1.02);
+  transform: scale(1.025);
 }
 
 .photo-wrap img {
@@ -311,54 +294,21 @@ h1 {
   margin-bottom: 18px;
 }
 
-h2 {
-  margin-bottom: 0;
+.section-kicker {
+  margin: 0;
+  color: var(--text);
   font-size: clamp(1.65rem, 4vw, 3.2rem);
   line-height: 1.02;
-  letter-spacing: 0;
+  font-weight: 800;
+  text-transform: none;
 }
 
-.skill-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.skill-card,
-.timeline p {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  backdrop-filter: blur(18px);
-}
-
-.skill-card {
-  min-height: 154px;
-  padding: 20px;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-}
-
-.skill-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(94, 231, 255, 0.4);
-  background: rgba(18, 28, 40, 0.86);
-}
-
-.skill-card h3 {
-  margin-bottom: 12px;
-  color: #ffffff;
-  font-size: 1.05rem;
-  line-height: 1.15;
-}
-
-.skill-card p,
-.timeline p {
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.skill-card p {
-  margin-bottom: 0;
-  font-size: 1rem;
+.experience .section-heading::after {
+  content: "";
+  align-self: center;
+  width: min(220px, 42vw);
+  height: 2px;
+  background: linear-gradient(90deg, var(--cyan), transparent);
 }
 
 .timeline {
@@ -373,7 +323,12 @@ h2 {
   align-items: center;
   margin: 0;
   padding: 14px 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
   font-size: 1.04rem;
+  line-height: 1.6;
+  backdrop-filter: blur(18px);
   transition: transform 180ms ease, border-color 180ms ease;
 }
 
@@ -388,27 +343,6 @@ h2 {
   font-weight: 800;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-.experience .section-kicker {
-  margin-bottom: 0;
-  color: var(--text);
-  font-size: clamp(1.65rem, 4vw, 3.2rem);
-  line-height: 1.02;
-  text-transform: none;
-  white-space: normal;
-}
-
-.experience .section-heading {
-  position: relative;
-}
-
-.experience .section-heading::after {
-  content: "";
-  align-self: center;
-  width: min(220px, 42vw);
-  height: 2px;
-  background: linear-gradient(90deg, var(--cyan), transparent);
 }
 
 .form-modal {
@@ -585,10 +519,6 @@ h2 {
     margin-top: -6px;
   }
 
-  .eyebrow {
-    font-size: clamp(0.74rem, 3.1vw, 0.96rem);
-  }
-
   .social-dock {
     max-width: 100%;
   }
@@ -601,17 +531,8 @@ h2 {
     padding-top: 44px;
   }
 
-  .section-heading,
-  .skill-grid,
   .timeline p {
     grid-template-columns: 1fr;
-  }
-
-  .skill-card {
-    min-height: auto;
-  }
-
-  .timeline p {
     gap: 5px;
   }
 
@@ -657,7 +578,6 @@ h2 {
   <main class="site-shell">
     <section class="intro" aria-labelledby="profile-name">
       <div class="contact-panel" data-tilt>
-        <p class="eyebrow">Cybersecurity &amp; Motorsports Engineer</p>
         <h1 id="profile-name">Nimit Limbachiya</h1>
         <div class="identity-strip" aria-label="Profile tags">
           <span>IIT Bombay</span>
@@ -700,7 +620,7 @@ h2 {
         <p><span>BioMe Labs</span> D-Sign Winter Intern in mechanical prototyping and design.</p>
         <p><span>Mood Indigo</span> Hospitality and PR Coordinator at IIT Bombay.</p>
         <p><span>ADDAPT 4.0</span> Cybersecurity hackathon prize: Best Use of Comet AI.</p>
-        <p><span>Instagram</span> Starting out as a content creator.</p>
+        <p><span>Instagram</span> Building a presence as a content creator.</p>
       </div>
     </section>
   </main>
