@@ -142,22 +142,29 @@ h1 {
 
 .identity-strip {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
   margin: 0 0 26px;
+  max-width: 100%;
+  overflow: visible;
 }
 
 .identity-strip span {
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex;
   min-height: 30px;
   align-items: center;
+  justify-content: center;
   border: 1px solid rgba(216, 225, 236, 0.16);
   background: rgba(255, 255, 255, 0.055);
   color: #e8f0f8;
-  padding: 0 10px;
-  font-size: 0.78rem;
+  padding: 0 7px;
+  font-size: clamp(0.64rem, 0.82vw, 0.78rem);
   font-weight: 800;
+  line-height: 1;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .social-dock {
@@ -615,7 +622,7 @@ h1 {
 
     <section class="section-block experience" aria-labelledby="experience-title">
       <div class="section-heading">
-        <p class="section-kicker" id="experience-title">Experience</p>
+        <p class="section-kicker" id="experience-title">Profile</p>
       </div>
 
       <div class="timeline">
