@@ -75,14 +75,17 @@ a {
 .intro {
   min-height: calc(100vh - 36px);
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 0.72fr);
+  grid-template-columns: minmax(0, 0.86fr) minmax(320px, 0.68fr);
   align-items: center;
   gap: 34px;
+  max-width: 1040px;
+  margin: 0 auto;
 }
 
 .contact-panel {
   position: relative;
   padding: clamp(28px, 4.6vw, 46px);
+  align-self: center;
   border: 1px solid var(--line);
   background: linear-gradient(145deg, rgba(16, 24, 35, 0.88), rgba(8, 12, 18, 0.76));
   box-shadow: var(--shadow);
@@ -130,8 +133,8 @@ p {
 
 h1 {
   max-width: none;
-  margin-bottom: 24px;
-  font-size: clamp(2.9rem, 5.1vw, 5rem);
+  margin-bottom: 22px;
+  font-size: clamp(2.7rem, 4.55vw, 4.55rem);
   line-height: 1;
   letter-spacing: 0;
   white-space: nowrap;
@@ -141,7 +144,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 0 24px;
+  margin: 0 0 26px;
 }
 
 .identity-strip span {
@@ -233,7 +236,8 @@ h1 {
 
 .photo-wrap {
   position: relative;
-  aspect-ratio: 4 / 5.25;
+  aspect-ratio: 4 / 4.65;
+  align-self: center;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: var(--panel-strong);
   box-shadow: var(--shadow);
@@ -615,12 +619,13 @@ h1 {
       </div>
 
       <div class="timeline">
-        <p><span>Office Efficiencies</span> Cybersecurity Engineer.</p>
+        <p><span>IIT Bombay</span> Civil Engineering undergraduate.</p>
         <p><span>IITB Racing</span> Junior Design Engineer, chassis subdivision.</p>
+        <p><span>Office Efficiencies</span> Cybersecurity Engineer.</p>
+        <p><span>ADDAPT 4.0</span> Cybersecurity hackathon prize: Best Use of Comet AI.</p>
         <p><span>BioMe Labs</span> D-Sign Winter Intern in mechanical prototyping and design.</p>
         <p><span>Mood Indigo</span> Hospitality and PR Coordinator at IIT Bombay.</p>
-        <p><span>ADDAPT 4.0</span> Cybersecurity hackathon prize: Best Use of Comet AI.</p>
-        <p><span>Instagram</span> Building a presence as a content creator.</p>
+        <p><span>Instagram</span> Content creator.</p>
       </div>
     </section>
   </main>
