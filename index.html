@@ -3,62 +3,90 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Nimit Limbachiya's animated personal bio."
-    />
+    <meta name="description" content="Nimit Limbachiya's animated personal bio." />
     <meta name="theme-color" content="#070716" />
     <title>Nimit Limbachiya</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="assets/photos/mirror-close.webp" as="image" />
-    <link rel="preload" href="assets/photos/origin-waterfall.webp" as="image" />
+    <link rel="preload" href="assets/photos/civil-lab.webp" as="image" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="film" aria-label="Animated personal bio">
-      <section class="sequence" id="sequence" aria-live="polite" aria-atomic="true">
-        <div class="wash wash-a" aria-hidden="true"></div>
-        <div class="wash wash-b" aria-hidden="true"></div>
-        <div class="grain" aria-hidden="true"></div>
-        <div class="halftone" aria-hidden="true"></div>
-        <div class="speedlines" aria-hidden="true"></div>
-
-        <div class="frame-stack" aria-hidden="true">
-          <figure class="shot shot-main">
-            <img id="heroPhoto" src="assets/photos/mirror-close.webp" alt="" decoding="async" fetchpriority="high" />
+    <main class="reel" id="reel" aria-label="Animated personal bio">
+      <section class="slide slide-origin is-active" data-slide="0" aria-label="Intro">
+        <div class="fx" aria-hidden="true"></div>
+        <div class="photo-zone photo-zone-right" aria-hidden="true">
+          <figure class="panel panel-hero panel-swing">
+            <img src="assets/photos/mirror-close.webp" alt="" decoding="async" fetchpriority="high" />
           </figure>
-          <figure class="shot shot-side shot-one">
-            <img id="sidePhotoA" src="assets/photos/brick-thinker.webp" alt="" decoding="async" />
+          <figure class="panel panel-orbit panel-a">
+            <img src="assets/photos/lego-spider.webp" alt="" decoding="async" />
           </figure>
-          <figure class="shot shot-side shot-two">
-            <img id="sidePhotoB" src="assets/photos/lego-spider.webp" alt="" decoding="async" />
-          </figure>
-          <figure class="shot shot-side shot-three">
-            <img id="sidePhotoC" src="assets/photos/neon-bull.webp" alt="" decoding="async" />
+          <figure class="panel panel-orbit panel-b">
+            <img src="assets/photos/neon-bull.webp" alt="" decoding="async" />
           </figure>
         </div>
-
-        <div class="script-card">
-          <p class="script-line" id="scriptLine">Alright let's do this one last time.</p>
+        <div class="text-zone text-left">
+          <div class="script-box box-impact">
+            <p>Alright let's do this one last time</p>
+            <p>My name is Nimit Limbachiya and I was bitten by a radioactive spider</p>
+          </div>
         </div>
-
-        <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
       </section>
 
-      <section class="montage" id="montage" aria-label="Photo collage">
-        <div class="montage-grid">
-          <figure class="tile tile-a"><img src="assets/photos/origin-waterfall.webp" alt="Nimit standing in front of a waterfall" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-b"><img src="assets/photos/brick-thinker.webp" alt="Nimit sitting beside a brick wall" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-c"><img src="assets/photos/lego-spider.webp" alt="A Spider-Man LEGO minifigure" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-d"><img src="assets/photos/neon-bull.webp" alt="Nimit beside neon wall art" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-e"><img src="assets/photos/jacket-pose.webp" alt="Nimit posing indoors with a jacket" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-f"><img src="assets/photos/mirror-arch.webp" alt="Nimit standing in front of an arched mirror" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-g"><img src="assets/photos/bed-stare.webp" alt="Nimit sitting on a bed looking to the side" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-h"><img src="assets/photos/smile-dinner.webp" alt="Nimit smiling at a restaurant" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-i"><img src="assets/photos/neon-parking.webp" alt="Nimit in front of a neon sign" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-j"><img src="assets/photos/pool-sideeye.webp" alt="Nimit looking sideways beside a pool" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-k"><img src="assets/photos/cake-lore.webp" alt="Nimit with a cake at a table" loading="lazy" decoding="async" /></figure>
-          <figure class="tile tile-l"><img src="assets/photos/mirror-glitch.webp" alt="Nimit taking a mirror selfie" loading="lazy" decoding="async" /></figure>
+      <section class="slide slide-sense" data-slide="1" aria-label="Spidey sense">
+        <div class="fx" aria-hidden="true"></div>
+        <div class="photo-strip" aria-hidden="true">
+          <figure class="panel strip-one"><img src="assets/photos/pool-sideeye.webp" alt="" loading="lazy" decoding="async" /></figure>
+          <figure class="panel strip-two"><img src="assets/photos/mirror-glitch.webp" alt="" loading="lazy" decoding="async" /></figure>
+          <figure class="panel strip-three"><img src="assets/photos/neon-parking.webp" alt="" loading="lazy" decoding="async" /></figure>
+        </div>
+        <div class="text-zone text-center">
+          <div class="script-box box-split">
+            <p>My new found spidey sense lets me</p>
+            <p>detect stupid people</p>
+            <p>and i can cling</p>
+            <p>to the past</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide slide-civil" data-slide="2" aria-label="IIT Bombay">
+        <div class="fx" aria-hidden="true"></div>
+        <div class="photo-zone photo-zone-left" aria-hidden="true">
+          <figure class="panel panel-civil">
+            <img src="assets/photos/civil-lab.webp" alt="" loading="lazy" decoding="async" />
+          </figure>
+          <figure class="panel panel-small panel-small-a">
+            <img src="assets/photos/brick-thinker.webp" alt="" loading="lazy" decoding="async" />
+          </figure>
+        </div>
+        <div class="text-zone text-right">
+          <div class="script-box box-civil">
+            <p>I am a third year student at IIT Bombay</p>
+            <p>doing civil engineering</p>
+            <p>I make a list of things to remember</p>
+            <p>and then forget about the list</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide slide-achievements" data-slide="3" aria-label="Achievements">
+        <div class="fx" aria-hidden="true"></div>
+        <div class="achievement-photos" aria-hidden="true">
+          <figure class="panel ach-photo-one"><img src="assets/photos/lego-spider.webp" alt="" loading="lazy" decoding="async" /></figure>
+          <figure class="panel ach-photo-two"><img src="assets/photos/neon-bull.webp" alt="" loading="lazy" decoding="async" /></figure>
+          <figure class="panel ach-photo-three"><img src="assets/photos/bed-stare.webp" alt="" loading="lazy" decoding="async" /></figure>
+        </div>
+        <div class="text-zone text-left">
+          <div class="script-box box-achievements">
+            <p>My achievements</p>
+          </div>
+        </div>
+        <div class="achievement-stack" aria-label="Achievements list">
+          <div class="achievement-card">100+ LEGO minifigures</div>
+          <div class="achievement-card">11k+ trophies in Clash Royale</div>
+          <div class="achievement-card">Can sleep 14+ hours straight</div>
         </div>
       </section>
     </main>
