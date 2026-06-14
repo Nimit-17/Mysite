@@ -5,162 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Nimit Limbachiya's animated personal bio, starring one radioactive spider incident and several questionable achievements."
+      content="Nimit Limbachiya's animated personal bio."
     />
-    <meta name="theme-color" content="#080816" />
-    <title>Nimit Limbachiya | Radioactive Spider Incident</title>
+    <meta name="theme-color" content="#070716" />
+    <title>Nimit Limbachiya</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="assets/photos/mirror-close.webp" as="image" />
     <link rel="preload" href="assets/photos/origin-waterfall.webp" as="image" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="texture texture-noise" aria-hidden="true"></div>
-    <div class="texture texture-halftone" aria-hidden="true"></div>
-    <div class="texture texture-speedlines" aria-hidden="true"></div>
+    <main class="film" aria-label="Animated personal bio">
+      <section class="sequence" id="sequence" aria-live="polite" aria-atomic="true">
+        <div class="wash wash-a" aria-hidden="true"></div>
+        <div class="wash wash-b" aria-hidden="true"></div>
+        <div class="grain" aria-hidden="true"></div>
+        <div class="halftone" aria-hidden="true"></div>
+        <div class="speedlines" aria-hidden="true"></div>
 
-    <main class="site-shell">
-      <section class="origin" id="origin" aria-labelledby="origin-title">
-        <div class="issue-stamp" aria-hidden="true">
-          <span>Issue #01</span>
-          <strong>Origin-ish Story</strong>
-        </div>
-
-        <div class="intro-controls" aria-label="Intro controls">
-          <button class="control-btn" type="button" data-action="skip">Skip</button>
-          <button class="control-btn" type="button" data-action="replay">Replay</button>
-        </div>
-
-        <div class="panel-rail" aria-hidden="true">
-          <figure class="rail-shot rail-shot-a">
-            <img src="assets/photos/mirror-close.webp" alt="" decoding="async" />
-          </figure>
-          <figure class="rail-shot rail-shot-b">
-            <img src="assets/photos/brick-thinker.webp" alt="" decoding="async" />
-          </figure>
-          <figure class="rail-shot rail-shot-c">
-            <img src="assets/photos/lego-spider.webp" alt="" decoding="async" />
-          </figure>
-        </div>
-
-        <div class="origin-grid">
-          <div class="title-card">
-            <p class="kicker">Meanwhile, in a suspiciously dramatic timeline...</p>
-            <h1 id="origin-title" class="glitch-title" data-text="Nimit Limbachiya">
-              Nimit Limbachiya
-            </h1>
-            <div class="burst-card" aria-hidden="true">
-              <span>Pow</span>
-              <span>Zap</span>
-              <span>Oof</span>
-            </div>
-          </div>
-
-          <div class="scene-frame" aria-live="polite" aria-atomic="true">
-            <div class="scene-counter">
-              <span id="sceneNumber">01</span>
-              <span id="sceneLabel">Cold Open</span>
-            </div>
-            <p class="script-line" id="scriptLine">
-              Alright let's do this one last time.
-            </p>
-            <div class="caption-strip" id="captionStrip">Click. Glitch. Dramatic eye contact.</div>
-            <div class="progress-track" aria-hidden="true">
-              <span id="progressBar"></span>
-            </div>
-          </div>
-
-          <div class="hero-comic-frame" aria-hidden="true">
+        <div class="frame-stack" aria-hidden="true">
+          <figure class="shot shot-main">
             <img id="heroPhoto" src="assets/photos/mirror-close.webp" alt="" decoding="async" fetchpriority="high" />
-            <div class="frame-label" id="frameLabel">SPIDEY SENSE: QUESTIONABLE</div>
-          </div>
+          </figure>
+          <figure class="shot shot-side shot-one">
+            <img id="sidePhotoA" src="assets/photos/brick-thinker.webp" alt="" decoding="async" />
+          </figure>
+          <figure class="shot shot-side shot-two">
+            <img id="sidePhotoB" src="assets/photos/lego-spider.webp" alt="" decoding="async" />
+          </figure>
+          <figure class="shot shot-side shot-three">
+            <img id="sidePhotoC" src="assets/photos/neon-bull.webp" alt="" decoding="async" />
+          </figure>
         </div>
 
-        <p class="sr-only" id="fullScript">
-          Alright let's do this one last time. My name is Nimit Limbachiya and I was bitten
-          by a radioactive spider. My newfound spidey sense helps me detect stupid people
-          and I can cling to...the past. I am a third year student at IIT Bombay pursuing
-          Civil engg I make a list of things to remember and then forget about the list.
-          Love to read Indian Mythology books My achievements: 100+ LEGO minifigures 11k+
-          trophies in Clash Royale Can sleep 14+ hours straight
-        </p>
+        <div class="script-card">
+          <p class="script-line" id="scriptLine">Alright let's do this one last time.</p>
+        </div>
+
+        <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
       </section>
 
-      <section class="collage" id="collage" aria-labelledby="collage-title">
-        <div class="collage-heading">
-          <p class="eyebrow">Post-credit scene</p>
-          <h2 id="collage-title">Evidence Board Of A Very Normal Person</h2>
-          <p>
-            No tidy boxes. No serious explanation. Just artifacts from the Nimit cinematic
-            universe.
-          </p>
-        </div>
-
-        <div class="collage-board" id="collageBoard">
-          <figure class="photo-card card-hero tilt-left pop-red" style="--x: 1; --y: 1">
-            <img src="assets/photos/origin-waterfall.webp" alt="Nimit standing in front of a waterfall" loading="lazy" decoding="async" />
-            <figcaption>origin story lighting budget: nature</figcaption>
-          </figure>
-
-          <figure class="photo-card card-tall tilt-right pop-blue" style="--x: 2; --y: 1">
-            <img src="assets/photos/brick-thinker.webp" alt="Nimit sitting beside a brick wall" loading="lazy" decoding="async" />
-            <figcaption>thinking about the list I forgot</figcaption>
-          </figure>
-
-          <figure class="photo-card card-small sticker pop-yellow" style="--x: 4; --y: 1">
-            <img src="assets/photos/lego-spider.webp" alt="A Spider-Man LEGO minifigure" loading="lazy" decoding="async" />
-            <figcaption>100+ tiny citizens</figcaption>
-          </figure>
-
-          <figure class="photo-card card-wide tilt-left pop-green" style="--x: 5; --y: 1">
-            <img src="assets/photos/neon-bull.webp" alt="Nimit beside neon wall art" loading="lazy" decoding="async" />
-            <figcaption>neon said main character</figcaption>
-          </figure>
-
-          <figure class="photo-card card-medium tilt-right pop-red" style="--x: 1; --y: 3">
-            <img src="assets/photos/jacket-pose.webp" alt="Nimit posing indoors with a jacket" loading="lazy" decoding="async" />
-            <figcaption>civil engg, dramatic posture minor</figcaption>
-          </figure>
-
-          <figure class="photo-card card-arch pop-blue" style="--x: 3; --y: 3">
-            <img src="assets/photos/mirror-arch.webp" alt="Nimit standing in front of an arched mirror" loading="lazy" decoding="async" />
-            <figcaption>multiverse portal, hotel edition</figcaption>
-          </figure>
-
-          <figure class="photo-card card-bed tilt-left pop-yellow" style="--x: 5; --y: 3">
-            <img src="assets/photos/bed-stare.webp" alt="Nimit sitting on a bed looking to the side" loading="lazy" decoding="async" />
-            <figcaption>14+ hours sleep: verified threat</figcaption>
-          </figure>
-
-          <figure class="photo-card card-small tilt-right pop-green" style="--x: 2; --y: 5">
-            <img src="assets/photos/smile-dinner.webp" alt="Nimit smiling at a restaurant" loading="lazy" decoding="async" />
-            <figcaption>rare footage: awake</figcaption>
-          </figure>
-
-          <figure class="photo-card card-wide pop-red" style="--x: 4; --y: 5">
-            <img src="assets/photos/neon-parking.webp" alt="Nimit in front of a neon sign" loading="lazy" decoding="async" />
-            <figcaption>glitch aura included</figcaption>
-          </figure>
-
-          <figure class="photo-card card-medium tilt-left pop-blue" style="--x: 1; --y: 6">
-            <img src="assets/photos/pool-sideeye.webp" alt="Nimit looking sideways beside a pool" loading="lazy" decoding="async" />
-            <figcaption>detecting stupid people nearby</figcaption>
-          </figure>
-
-          <figure class="photo-card card-small pop-yellow" style="--x: 3; --y: 6">
-            <img src="assets/photos/cake-lore.webp" alt="Nimit with a cake at a table" loading="lazy" decoding="async" />
-            <figcaption>mythology arc unlocked</figcaption>
-          </figure>
-
-          <figure class="photo-card card-tall tilt-right pop-green" style="--x: 5; --y: 6">
-            <img src="assets/photos/mirror-glitch.webp" alt="Nimit taking a mirror selfie" loading="lazy" decoding="async" />
-            <figcaption>mirror selfie but make it ominous</figcaption>
-          </figure>
-        </div>
-
-        <div class="final-dialogue" aria-label="Final note">
-          <span>Transmission ends.</span>
-          <strong>Clash trophies: 11k+. Memory: unavailable.</strong>
+      <section class="montage" id="montage" aria-label="Photo collage">
+        <div class="montage-grid">
+          <figure class="tile tile-a"><img src="assets/photos/origin-waterfall.webp" alt="Nimit standing in front of a waterfall" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-b"><img src="assets/photos/brick-thinker.webp" alt="Nimit sitting beside a brick wall" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-c"><img src="assets/photos/lego-spider.webp" alt="A Spider-Man LEGO minifigure" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-d"><img src="assets/photos/neon-bull.webp" alt="Nimit beside neon wall art" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-e"><img src="assets/photos/jacket-pose.webp" alt="Nimit posing indoors with a jacket" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-f"><img src="assets/photos/mirror-arch.webp" alt="Nimit standing in front of an arched mirror" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-g"><img src="assets/photos/bed-stare.webp" alt="Nimit sitting on a bed looking to the side" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-h"><img src="assets/photos/smile-dinner.webp" alt="Nimit smiling at a restaurant" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-i"><img src="assets/photos/neon-parking.webp" alt="Nimit in front of a neon sign" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-j"><img src="assets/photos/pool-sideeye.webp" alt="Nimit looking sideways beside a pool" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-k"><img src="assets/photos/cake-lore.webp" alt="Nimit with a cake at a table" loading="lazy" decoding="async" /></figure>
+          <figure class="tile tile-l"><img src="assets/photos/mirror-glitch.webp" alt="Nimit taking a mirror selfie" loading="lazy" decoding="async" /></figure>
         </div>
       </section>
     </main>
