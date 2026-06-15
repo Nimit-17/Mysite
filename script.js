@@ -1,9 +1,11 @@
 (function () {
   const slides = Array.from(document.querySelectorAll(".slide"));
+  const dots = Array.from(document.querySelectorAll(".dot"));
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const slideTimers = new WeakMap();
   let activeIndex = 0;
   let locked = false;
+  let touchStartY = 0;
 
   if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
@@ -66,6 +68,13 @@
       slide.classList.toggle("is-active", isActive);
       if (isActive) startLoop(slide);
       else stopLoop(slide);
+    });
+
+    dots.forEach((dot, dotIndex) => {
+      const isActive = dotIndex === activeIndex;
+      dot.classList.toggle("is-active", isActive);
+      if (isActive) dot.setAttribute("aria-current", "true");
+      else dot.removeAttribute("aria-current");
     });
   }
 
@@ -140,6 +149,31 @@
       event.preventDefault();
       goTo(nearestSlide() - 1);
     }
+  });
+
+  window.addEventListener(
+    "touchstart",
+    (event) => {
+      touchStartY = event.touches[0].clientY;
+    },
+    { passive: true }
+  );
+
+  window.addEventListener(
+    "touchend",
+    (event) => {
+      const diff = touchStartY - event.changedTouches[0].clientY;
+      if (Math.abs(diff) <= 40 || locked) return;
+      goTo(nearestSlide() + (diff > 0 ? 1 : -1));
+    },
+    { passive: true }
+  );
+
+  dots.forEach((dot) => {
+    dot.addEventListener("click", () => {
+      const target = Number(dot.dataset.target);
+      if (Number.isFinite(target)) goTo(target);
+    });
   });
 
   window.addEventListener("resize", () => setActive(nearestSlide()));

@@ -12,6 +12,10 @@
   --orange: #ff8a18;
   --shadow: 10px 10px 0 var(--line);
   --hard-shadow: 18px 18px 0 var(--line);
+  --mega-shadow: 26px 26px 0 var(--line), -10px -10px 0 var(--accent);
+  --chroma: 4px;
+  --chroma-pop: 6px;
+  --chroma-lift: 7px;
   --ease-pop: cubic-bezier(0.18, 1.35, 0.24, 1);
 }
 
@@ -41,6 +45,7 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+  touch-action: pan-y;
 }
 
 img {
@@ -52,6 +57,41 @@ img {
 
 .reel {
   width: 100%;
+}
+
+.slide-dots {
+  position: fixed;
+  top: 50%;
+  right: max(14px, env(safe-area-inset-right));
+  z-index: 30;
+  display: grid;
+  gap: 11px;
+  transform: translateY(-50%);
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  box-shadow: 3px 3px 0 var(--line);
+  cursor: pointer;
+  opacity: 0.72;
+  transition: transform 180ms ease, background 180ms ease, opacity 180ms ease;
+}
+
+.dot.is-active {
+  height: 28px;
+  background: var(--yellow);
+  opacity: 1;
+  transform: translateX(-3px) scale(1.08);
+}
+
+.dot:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 4px;
 }
 
 .slide {
@@ -68,6 +108,7 @@ img {
   grid-template-rows: minmax(26px, 6vh) minmax(0, 1fr) minmax(26px, 6vh);
   isolation: isolate;
   background:
+    radial-gradient(circle at 50% 50%, rgba(255, 233, 77, 0.08), transparent 18rem),
     linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     radial-gradient(circle at 16% 14%, rgba(255, 45, 85, 0.38), transparent 26rem),
@@ -89,6 +130,19 @@ img {
     rgba(255, 255, 255, 0.02);
 }
 
+.slide::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.34;
+  background:
+    conic-gradient(from 20deg at 18% 22%, transparent 0 10deg, rgba(255, 233, 77, 0.8) 11deg 13deg, transparent 14deg 32deg),
+    conic-gradient(from 210deg at 82% 78%, transparent 0 12deg, rgba(0, 229, 255, 0.72) 13deg 16deg, transparent 17deg 36deg);
+  animation: rays-spin 10s linear infinite;
+}
+
 .slide-origin {
   --accent: var(--blue);
 }
@@ -103,9 +157,54 @@ img {
   --frame-rotate: -0.2deg;
 }
 
+.slide-cyber {
+  --accent: var(--magenta);
+  --frame-rotate: -0.65deg;
+  background:
+    linear-gradient(90deg, rgba(69, 255, 138, 0.09) 1px, transparent 1px),
+    linear-gradient(rgba(255, 61, 242, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 22% 18%, rgba(255, 61, 242, 0.42), transparent 25rem),
+    radial-gradient(circle at 86% 40%, rgba(69, 255, 138, 0.34), transparent 28rem),
+    linear-gradient(135deg, #070716 0%, #241034 46%, #050510 100%);
+  background-size: 38px 38px, 38px 38px, auto, auto, auto;
+}
+
 .slide-achievements {
   --accent: var(--green);
   --frame-rotate: 0.35deg;
+}
+
+.burst {
+  position: absolute;
+  z-index: 1;
+  width: clamp(130px, 16vw, 240px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--accent);
+  clip-path: polygon(50% 0, 58% 34%, 92% 18%, 68% 47%, 100% 54%, 65% 61%, 86% 93%, 56% 70%, 48% 100%, 41% 67%, 8% 84%, 31% 54%, 0 45%, 35% 38%, 16% 8%, 45% 31%);
+  filter: drop-shadow(8px 8px 0 var(--line));
+  mix-blend-mode: screen;
+}
+
+.burst-a {
+  top: 10%;
+  left: 47%;
+}
+
+.burst-b {
+  right: 9%;
+  bottom: 10%;
+  width: clamp(90px, 10vw, 170px);
+  background: var(--yellow);
+}
+
+.slide.is-active .burst-a {
+  animation: burst-hit 1.9s steps(2, end) infinite;
+}
+
+.slide.is-active .burst-b {
+  animation: burst-hit 2.6s steps(2, end) infinite 420ms;
 }
 
 .fx,
@@ -159,11 +258,11 @@ img {
   margin: 0;
   border: clamp(4px, 0.55vw, 7px) solid var(--line);
   background: var(--line);
-  box-shadow: var(--shadow), -9px -9px 0 var(--accent);
+  box-shadow: var(--mega-shadow);
   overflow: hidden;
   transform: rotate(var(--image-rotate));
   clip-path: polygon(4% 0, 100% 4%, 95% 100%, 0 96%);
-  filter: saturate(1.28) contrast(1.1);
+  filter: saturate(1.38) contrast(1.13);
 }
 
 .hero-frame::before,
@@ -186,7 +285,8 @@ img {
   z-index: 3;
   background:
     linear-gradient(90deg, rgba(255, 45, 85, 0.3), transparent 30%),
-    linear-gradient(-90deg, rgba(0, 229, 255, 0.28), transparent 30%);
+    linear-gradient(-90deg, rgba(0, 229, 255, 0.28), transparent 30%),
+    repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 255, 255, 0.12) 10px 11px);
   mix-blend-mode: screen;
 }
 
@@ -211,6 +311,10 @@ img {
 
 .hero-civil img {
   object-position: 50% 31%;
+}
+
+.hero-cyber img {
+  object-position: 48% 35%;
 }
 
 .hero-waterfall img {
@@ -241,18 +345,19 @@ img {
   padding: clamp(24px, 4vw, 54px);
   border: clamp(4px, 0.5vw, 7px) solid var(--line);
   background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.8), transparent 8rem),
     linear-gradient(118deg, rgba(255, 233, 77, 0.98), rgba(255, 244, 184, 0.94) 44%, rgba(0, 229, 255, 0.88)),
     var(--paper);
   color: var(--line);
-  box-shadow: var(--hard-shadow);
+  box-shadow: var(--hard-shadow), -8px -8px 0 var(--accent);
   font-size: clamp(2.4rem, 5vw, 6.4rem);
   line-height: 0.92;
   letter-spacing: 0;
   text-wrap: balance;
   text-shadow:
-    4px 0 0 var(--blue),
-    -4px 0 0 var(--red),
-    0 7px 0 rgba(255, 255, 255, 0.78);
+    var(--chroma) 0 0 var(--blue),
+    calc(var(--chroma) * -1) 0 0 var(--red),
+    0 var(--chroma-lift) 0 rgba(255, 255, 255, 0.78);
   opacity: 0;
   visibility: hidden;
   transform: translateY(46px) rotate(-5deg) scale(0.9);
@@ -297,7 +402,7 @@ img {
 .line-card.is-showing {
   visibility: visible;
   opacity: 1;
-  animation: text-pop 640ms var(--ease-pop) both, text-chroma 1.05s steps(2, end) infinite;
+  animation: text-pop 520ms var(--ease-pop) both, text-chroma 1.05s steps(2, end) infinite;
 }
 
 .line-card.is-leaving {
@@ -307,9 +412,10 @@ img {
 
 .line-card.emphasis {
   background:
-    radial-gradient(circle at 22% 20%, rgba(255, 61, 242, 0.3), transparent 16rem),
-    linear-gradient(135deg, rgba(8, 8, 22, 0.97), rgba(20, 20, 52, 0.94));
+    radial-gradient(circle at 22% 20%, color-mix(in srgb, var(--accent) 52%, transparent), transparent 16rem),
+    linear-gradient(135deg, rgba(8, 8, 22, 0.98), color-mix(in srgb, var(--accent) 28%, #141434 72%));
   color: var(--yellow);
+  box-shadow: var(--hard-shadow), -8px -8px 0 var(--accent);
   text-align: center;
 }
 
@@ -318,13 +424,17 @@ img {
   max-width: 100%;
   background: var(--red);
   color: var(--white);
-  box-shadow: var(--hard-shadow), 8px -8px 0 var(--blue);
+  box-shadow: var(--hard-shadow), 8px -8px 0 var(--accent);
   font-size: clamp(2.45rem, 4.8vw, 6.1rem);
   text-align: center;
 }
 
 .copy-civil .line-card {
   font-size: clamp(1.95rem, 3.9vw, 5rem);
+}
+
+.copy-cyber .line-card {
+  font-size: clamp(1.9rem, 3.8vw, 4.85rem);
 }
 
 .copy-achievements .line-card {
@@ -348,6 +458,26 @@ img {
 @keyframes speed {
   to {
     background-position: 150px 0, 0 0;
+  }
+}
+
+@keyframes rays-spin {
+  to {
+    transform: rotate(1turn) scale(1.04);
+  }
+}
+
+@keyframes burst-hit {
+  0%,
+  72%,
+  100% {
+    opacity: 0;
+    transform: scale(0.75) rotate(-12deg);
+  }
+  8%,
+  22% {
+    opacity: 0.48;
+    transform: scale(1.06) rotate(7deg);
   }
 }
 
@@ -384,9 +514,9 @@ img {
 @keyframes text-chroma {
   20% {
     text-shadow:
-      -6px 0 0 var(--blue),
-      6px 0 0 var(--red),
-      0 7px 0 rgba(255, 255, 255, 0.78);
+      calc(var(--chroma-pop) * -1) 0 0 var(--blue),
+      var(--chroma-pop) 0 0 var(--red),
+      0 var(--chroma-lift) 0 rgba(255, 255, 255, 0.78);
   }
   21% {
     transform: translate(4px, -2px) skew(-2deg);
@@ -396,9 +526,9 @@ img {
   }
   70% {
     text-shadow:
-      4px 0 0 var(--green),
-      -4px 0 0 var(--magenta),
-      0 7px 0 rgba(255, 255, 255, 0.78);
+      var(--chroma) 0 0 var(--green),
+      calc(var(--chroma) * -1) 0 0 var(--magenta),
+      0 var(--chroma-lift) 0 rgba(255, 255, 255, 0.78);
   }
 }
 
@@ -428,6 +558,21 @@ img {
 }
 
 @media (max-width: 1040px) {
+  .slide-dots {
+    right: max(8px, env(safe-area-inset-right));
+    gap: 8px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    box-shadow: 2px 2px 0 var(--line);
+  }
+
+  .dot.is-active {
+    height: 24px;
+  }
+
   .slide {
     grid-template-columns: minmax(14px, 1fr) minmax(0, 560px) minmax(14px, 1fr);
     grid-template-rows: minmax(14px, 3svh) minmax(0, 42svh) minmax(0, 48svh) minmax(14px, 3svh);
@@ -478,12 +623,19 @@ img {
   }
 
   .copy-civil .line-card,
+  .copy-cyber .line-card,
   .copy-achievements .achievement-line {
     font-size: clamp(1.55rem, 6.8vw, 3.5rem);
   }
 }
 
 @media (max-width: 520px) {
+  :root {
+    --chroma: 1.5px;
+    --chroma-pop: 1px;
+    --chroma-lift: 3px;
+  }
+
   .slide {
     grid-template-rows: 10px 38svh minmax(0, 54svh) 10px;
   }
@@ -512,10 +664,6 @@ img {
     border-width: 4px;
     font-size: clamp(1.62rem, 9.7vw, 3.1rem);
     line-height: 0.94;
-    text-shadow:
-      3px 0 0 var(--blue),
-      -3px 0 0 var(--red),
-      0 5px 0 rgba(255, 255, 255, 0.78);
   }
 
   .line-card.medium-line {
@@ -528,6 +676,7 @@ img {
   }
 
   .copy-civil .line-card,
+  .copy-cyber .line-card,
   .copy-achievements .achievement-line {
     font-size: clamp(1.32rem, 7.8vw, 2.65rem);
   }
@@ -540,8 +689,16 @@ img {
     object-position: 50% 29%;
   }
 
+  .hero-cyber img {
+    object-position: 48% 28%;
+  }
+
   .hero-waterfall img {
     object-position: 49% 38%;
+  }
+
+  .burst {
+    opacity: 0.12;
   }
 }
 
