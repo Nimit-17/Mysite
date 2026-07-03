@@ -3,95 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Nimit Limbachiya's animated personal bio." />
-    <meta name="theme-color" content="#070716" />
+    <meta name="description" content="Nimit Limbachiya — a short cinematic origin story." />
+    <meta name="theme-color" content="#f2eee3" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Nimit Limbachiya" />
+    <meta property="og:description" content="Alright let's do this one last time — a short cinematic origin story." />
+    <meta property="og:url" content="https://nimit.site/" />
+    <meta property="og:image" content="https://nimit.site/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
     <title>Nimit Limbachiya</title>
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-    <link rel="preload" href="assets/photos/mirror-close.webp" as="image" />
-    <link rel="preload" href="assets/photos/pool-sideeye.webp" as="image" />
-    <link rel="preload" href="assets/photos/mirror-glitch.webp" as="image" />
-    <link rel="preload" href="assets/photos/civil-lab.webp" as="image" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <nav class="slide-dots" aria-label="Slide progress">
-      <button class="dot is-active" type="button" aria-label="Go to slide 1" aria-current="true" data-target="0"></button>
-      <button class="dot" type="button" aria-label="Go to slide 2" data-target="1"></button>
-      <button class="dot" type="button" aria-label="Go to slide 3" data-target="2"></button>
-      <button class="dot" type="button" aria-label="Go to slide 4" data-target="3"></button>
-      <button class="dot" type="button" aria-label="Go to slide 5" data-target="4"></button>
-    </nav>
-    <main class="reel" id="reel" aria-label="Animated personal bio">
-      <section class="slide slide-origin is-active" data-slide="0" aria-label="Intro">
-        <div class="fx" aria-hidden="true"></div>
-        <div class="burst burst-a" aria-hidden="true"></div>
-        <div class="burst burst-b" aria-hidden="true"></div>
-        <figure class="hero-frame hero-right hero-phone" aria-hidden="true">
-          <img src="assets/photos/mirror-close.webp" alt="" decoding="async" fetchpriority="high" />
-        </figure>
-        <div class="copy-stage copy-left" aria-live="polite" aria-atomic="true">
-          <div class="line-card is-showing" data-duration="1750">Alright let's do this one last time</div>
-          <div class="line-card long-line" data-duration="2850">My name is Nimit Limbachiya and I was bitten by a radioactive spider</div>
-        </div>
-      </section>
-
-      <section class="slide slide-sense" data-slide="1" aria-label="Spidey sense">
-        <div class="fx" aria-hidden="true"></div>
-        <div class="burst burst-a" aria-hidden="true"></div>
-        <div class="burst burst-b" aria-hidden="true"></div>
-        <figure class="hero-frame hero-left hero-pool" aria-hidden="true">
-          <img src="assets/photos/pool-sideeye.webp" alt="" loading="lazy" decoding="async" />
-        </figure>
-        <div class="copy-stage copy-right copy-sense" aria-live="polite" aria-atomic="true">
-          <div class="line-card is-showing medium-line" data-duration="1550">My new found spidey sense lets me</div>
-          <div class="line-card emphasis" data-duration="1500">detect stupid people</div>
-          <div class="line-card sticker-line" data-duration="950">and i can cling</div>
-          <div class="line-card sticker-line" data-duration="1250">to the past</div>
-        </div>
-      </section>
-
-      <section class="slide slide-cyber" data-slide="2" aria-label="Cybersecurity">
-        <div class="fx" aria-hidden="true"></div>
-        <div class="burst burst-a" aria-hidden="true"></div>
-        <div class="burst burst-b" aria-hidden="true"></div>
-        <figure class="hero-frame hero-right hero-cyber" aria-hidden="true">
-          <img src="assets/photos/mirror-glitch.webp" alt="" loading="lazy" decoding="async" />
-        </figure>
-        <div class="copy-stage copy-left copy-cyber" aria-live="polite" aria-atomic="true">
-          <div class="line-card is-showing medium-line" data-duration="1700">My laptop was hacked and</div>
-          <div class="line-card medium-line emphasis" data-duration="2100">that led me to get into cybersecurity</div>
-        </div>
-      </section>
-
-      <section class="slide slide-civil" data-slide="3" aria-label="IIT Bombay">
-        <div class="fx" aria-hidden="true"></div>
-        <div class="burst burst-a" aria-hidden="true"></div>
-        <div class="burst burst-b" aria-hidden="true"></div>
-        <figure class="hero-frame hero-left hero-civil" aria-hidden="true">
-          <img src="assets/photos/civil-lab.webp" alt="" loading="lazy" decoding="async" />
-        </figure>
-        <div class="copy-stage copy-right copy-civil" aria-live="polite" aria-atomic="true">
-          <div class="line-card is-showing medium-line" data-duration="1850">I am a third year student at IIT Bombay</div>
-          <div class="line-card" data-duration="1500">doing civil engineering</div>
-        </div>
-      </section>
-
-      <section class="slide slide-achievements" data-slide="4" aria-label="Achievements">
-        <div class="fx" aria-hidden="true"></div>
-        <div class="burst burst-a" aria-hidden="true"></div>
-        <div class="burst burst-b" aria-hidden="true"></div>
-        <figure class="hero-frame hero-right hero-waterfall" aria-hidden="true">
-          <img src="assets/photos/origin-waterfall.webp" alt="" loading="lazy" decoding="async" />
-        </figure>
-        <div class="copy-stage copy-left copy-achievements" aria-live="polite" aria-atomic="true">
-          <div class="line-card is-showing" data-duration="1300">My achievements</div>
-          <div class="line-card achievement-line" data-duration="1450">100+ LEGO minifigures</div>
-          <div class="line-card achievement-line" data-duration="1500">11k+ trophies in Clash Royale</div>
-          <div class="line-card achievement-line" data-duration="1650">Can sleep 14+ hours straight</div>
-        </div>
-      </section>
-    </main>
-
-    <script src="script.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
