@@ -1,7 +1,8 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { TextPlugin } from "gsap/TextPlugin";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
 const params = new URLSearchParams(window.location.search);
 
@@ -9,6 +10,46 @@ const params = new URLSearchParams(window.location.search);
 export const REDUCED_MOTION =
   window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
   params.get("motion") === "reduced";
+
+/* ------------------------------------------------------------------ intro */
+
+const INTRO_KEY = "nimit-intro-done";
+
+function introSeen() {
+  try {
+    return sessionStorage.getItem(INTRO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** True when the entrance preloader should play this page load. */
+export const INTRO_PENDING =
+  !REDUCED_MOTION && !introSeen() && params.get("intro") !== "off";
+
+let introDone = !INTRO_PENDING;
+
+/** Mark the intro finished (or skipped) and release anything waiting on it. */
+export function finishIntro() {
+  if (introDone) return;
+  introDone = true;
+  try {
+    sessionStorage.setItem(INTRO_KEY, "1");
+  } catch {
+    /* private mode — replaying next load is fine */
+  }
+  window.dispatchEvent(new CustomEvent("intro:done"));
+}
+
+/** Run cb once the intro is over (immediately if it already is / never was). */
+export function whenIntroDone(cb) {
+  if (introDone) {
+    cb();
+    return () => {};
+  }
+  window.addEventListener("intro:done", cb, { once: true });
+  return () => window.removeEventListener("intro:done", cb);
+}
 
 export const IS_MOBILE = window.matchMedia("(max-width: 767px)").matches;
 

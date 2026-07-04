@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { REDUCED_MOTION, ScrollTrigger } from "./lib/motion";
+import Preloader from "./components/Preloader";
 import ProgressRail from "./components/ProgressRail";
 import Origin from "./scenes/Origin";
 import Sense from "./scenes/Sense";
@@ -23,6 +24,7 @@ export default function App() {
 
   return (
     <>
+      <Preloader />
       <ProgressRail />
       <main>
         <div data-scene="origin"><Origin /></div>

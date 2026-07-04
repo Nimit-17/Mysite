@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { gsap, REDUCED_MOTION, DIST, IS_MOBILE, pinnedTimeline, splitWords, watchScene } from "../lib/motion";
+import { gsap, REDUCED_MOTION, DIST, IS_MOBILE, pinnedTimeline, splitWords, watchScene, whenIntroDone } from "../lib/motion";
 import coastal from "../../assets/photos/coastal-portrait-860.jpeg";
 
 /*
@@ -41,6 +41,7 @@ export default function Origin() {
       watchScene(root.current, "origin");
       return;
     }
+    let offIntro = () => {};
     const ctx = gsap.context((self) => {
       const q = self.selector;
       const words1 = splitWords(q(".line-1")[0]);
@@ -48,15 +49,17 @@ export default function Origin() {
       const shards = q(".shard");
       const cracks = q(".crack");
 
-      // entrance beat on load — calm
+      // entrance beat — calm; built paused, played on the preloader hand-off
       gsap.set(q(".portrait-wrap"), { yPercent: 6, autoAlpha: 0 });
       gsap.set(words1, { yPercent: 120, autoAlpha: 0 });
-      gsap.to(q(".portrait-wrap"), { yPercent: 0, autoAlpha: 1, duration: 1.1, ease: "power3.out", delay: 0.15 });
-      gsap.to(words1, {
-        yPercent: 0, autoAlpha: 1, duration: 0.9, ease: "power4.out",
-        stagger: 0.055, delay: 0.45,
-      });
-      gsap.to(q(".scroll-cue"), { autoAlpha: 1, duration: 0.8, delay: 1.6 });
+      const entrance = gsap.timeline({ paused: true });
+      entrance
+        .to(q(".portrait-wrap"), { yPercent: 0, autoAlpha: 1, duration: 1.1, ease: "power3.out" }, 0.15)
+        .to(words1, {
+          yPercent: 0, autoAlpha: 1, duration: 0.9, ease: "power4.out", stagger: 0.055,
+        }, 0.45)
+        .to(q(".scroll-cue"), { autoAlpha: 1, duration: 0.8 }, 1.6);
+      offIntro = whenIntroDone(() => entrance.play());
 
       cracks.forEach((c) => {
         const len = c.getTotalLength();
@@ -110,7 +113,10 @@ export default function Origin() {
         .to(q(".bite-ring"), { autoAlpha: 0, duration: 0.6 }, 2.6)
         .to({}, { duration: 0.25 }); // brief settle before unpin
     }, root);
-    return () => ctx.revert();
+    return () => {
+      offIntro();
+      ctx.revert();
+    };
   }, []);
 
   return (

@@ -162,6 +162,7 @@ body {
 
 .underline-scribble {
   position: relative;
+  display: inline-block; /* keeps the phrase whole so the scribble svg gets real width */
 }
 .underline-scribble > svg {
   position: absolute;
@@ -201,6 +202,61 @@ body {
     color-mix(in srgb, var(--color-paper) 3%, transparent) 3px 4px
   );
   z-index: 4;
+}
+
+/* dusk scene (internship) — warm amber, late-afternoon light */
+.theme-dusk {
+  background: #ecd9b8;
+  color: var(--color-ink);
+}
+/* light through the shutters — echoes the warm-portrait photo */
+.shutter-light::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    177deg,
+    transparent 0 84px,
+    color-mix(in srgb, #fff3d6 42%, transparent) 84px 116px
+  );
+  opacity: 0.5;
+  z-index: 1;
+}
+
+/* worklog caret (internship) */
+.i-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--color-rust);
+}
+
+/* exit sign chip (spidey sense) */
+.exit-sign {
+  display: inline-block;
+  padding: 0.08em 0.5em 0.14em;
+  border-radius: 6px;
+  background: var(--color-ink);
+  color: var(--color-venom);
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-venom) 45%, transparent);
+}
+
+/* sense beat slot — three beats share one grid cell and trade places */
+.beat-stack {
+  display: grid;
+}
+
+/* count-up numbers hold their final width so lines don't shift */
+.count {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
 }
 
 /* blueprint grid for the civil scene */
@@ -268,6 +324,19 @@ body {
   min-height: auto;
   padding-top: clamp(3rem, 8vw, 6rem);
   padding-bottom: clamp(3rem, 8vw, 6rem);
+}
+
+/* the sense beats overlap one grid cell while animated; stack them statically */
+.reduced-motion .beat-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.reduced-motion .beat-stack .exit-beat {
+  padding-top: 0;
+}
+.reduced-motion .i-caret {
+  display: none;
 }
 
 } /* end @layer components */

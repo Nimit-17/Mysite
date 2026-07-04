@@ -22,7 +22,7 @@ export default function Civil() {
       gsap.set(q(".setup .w"), { yPercent: 120, autoAlpha: 0 });
       gsap.set(q(".photo-lab"), { clipPath: "inset(0 0 100% 0)" });
       gsap.set(q(".photo-lab img"), { scale: 1.15, yPercent: 8 });
-      gsap.set(q(".punchline"), { scale: 1.5, autoAlpha: 0, rotate: 3 });
+      gsap.set(q(".punchline"), { scale: 2.1, autoAlpha: 0, rotate: 2 });
       q(".measure").forEach((p) => {
         const len = p.getTotalLength();
         gsap.set(p, { strokeDasharray: len, strokeDashoffset: len, autoAlpha: 0 });
@@ -36,9 +36,13 @@ export default function Civil() {
         .set(q(".measure"), { autoAlpha: 1 }, 0.8)
         .to(q(".measure"), { strokeDashoffset: 0, duration: 0.6, ease: "power2.inOut" }, 0.8)
 
-        .to(q(".punchline"), { scale: 1, autoAlpha: 1, rotate: -1.5, duration: 0.5, ease: "back.out(2.4)" }, 1.5)
-        .fromTo(q(".photo-lab"), { rotate: 0 }, { rotate: -1.2, duration: 0.18 }, 1.52)
-        .to(q(".photo-lab"), { rotate: 0, duration: 0.3 }, 1.7)
+        // stamp press: drops fast, hits, squashes, settles — no bounce
+        .to(q(".punchline"), { autoAlpha: 1, duration: 0.08 }, 1.5)
+        .to(q(".punchline"), { scale: 1, rotate: -1.5, duration: 0.22, ease: "power3.in" }, 1.5)
+        .to(q(".punchline"), { scaleY: 0.95, duration: 0.06, ease: "power1.out" }, 1.72)
+        .to(q(".punchline"), { scaleY: 1, duration: 0.16, ease: "power2.out" }, 1.78)
+        .fromTo(q(".photo-lab"), { rotate: 0 }, { rotate: -1.2, duration: 0.14 }, 1.72)
+        .to(q(".photo-lab"), { rotate: 0, duration: 0.3 }, 1.86)
         .to({}, { duration: 0.5 });
     }, root);
     return () => ctx.revert();
@@ -47,14 +51,14 @@ export default function Civil() {
   return (
     <section ref={root} className="scene grain blueprint bg-paper" aria-label="Scene 4 — IIT Bombay, civil engineering">
       <div className="scene-pad relative z-10 flex min-h-svh items-center">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-6 md:grid-cols-[1.05fr_0.95fr] md:gap-16">
           {/* copy */}
           <div className="order-2 max-w-xl md:order-1">
             <p className="t-label mb-5 text-ink-soft">04 / meanwhile, on campus</p>
             <p className="setup t-scene text-[clamp(1.5rem,1rem+2.2vw,2.7rem)]">
               I am a third year student at IIT Bombay
             </p>
-            <svg className="my-6 h-4 w-full max-w-sm" viewBox="0 0 300 16" preserveAspectRatio="none" aria-hidden="true">
+            <svg className="my-4 h-4 w-full max-w-sm md:my-6" viewBox="0 0 300 16" preserveAspectRatio="none" aria-hidden="true">
               <path
                 className="measure"
                 d="M2 2 L2 14 M2 8 L298 8 M298 2 L298 14 M14 4.5 L3 8 L14 11.5 M286 4.5 L297 8 L286 11.5"
@@ -71,7 +75,7 @@ export default function Civil() {
           </div>
 
           {/* photo */}
-          <div className="order-1 mx-auto w-[min(74vw,320px)] md:order-2 md:w-[min(32vw,400px)]">
+          <div className="order-1 mx-auto w-[min(48vw,220px)] md:order-2 md:w-[min(32vw,400px)]">
             <div className="photo-lab photo-panel" style={{ aspectRatio: "3/4.1" }}>
               <img src={lab} alt="Nimit in orange coveralls and a face shield, holding a jigsaw in a workshop" loading="lazy" decoding="async" />
             </div>

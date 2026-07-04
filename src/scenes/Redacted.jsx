@@ -18,7 +18,8 @@ export default function Redacted() {
     const ctx = gsap.context((self) => {
       const q = self.selector;
 
-      gsap.set(q(".r-line"), { autoAlpha: 0, y: 26 });
+      // lines develop behind the scan — a linear wipe, not a fade-up
+      gsap.set(q(".r-line"), { clipPath: "inset(0 100% 0 0)" });
       gsap.set(q(".photo-glitch"), { autoAlpha: 0, scale: 1.06 });
       gsap.set(q(".scanbar"), { yPercent: -40, autoAlpha: 0 });
       gsap.set(q(".redact"), { autoAlpha: 0, scaleX: 0.4, transformOrigin: "left center" });
@@ -31,12 +32,12 @@ export default function Redacted() {
         .to(q(".scanbar"), { yPercent: 4300, duration: 2.6, ease: "none" }, 0.4)
         .to(q(".r-meta"), { autoAlpha: 1, duration: 0.4 }, 0.35)
 
-        .to(q(".r-line-1"), { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.55)
+        .to(q(".r-line-1"), { clipPath: "inset(0 0% 0 0)", duration: 0.55, ease: "none" }, 0.55)
         .to(q(".redact-1"), { autoAlpha: 1, scaleX: 1, duration: 0.35, ease: "power4.out" }, 0.95)
         .to(q(".redact-1"), { skewX: -12, x: 3, duration: 0.05, ease: "steps(1)" }, 1.32)
         .to(q(".redact-1"), { skewX: 0, x: 0, duration: 0.05 }, 1.38)
 
-        .to(q(".r-line-2"), { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" }, 1.5)
+        .to(q(".r-line-2"), { clipPath: "inset(0 0% 0 0)", duration: 0.55, ease: "none" }, 1.5)
         .to(q(".redact-2"), { autoAlpha: 1, scaleX: 1, duration: 0.35, ease: "power4.out" }, 1.95)
         .to(q(".redact-2"), { skewX: 12, x: -3, duration: 0.05, ease: "steps(1)" }, 2.28)
         .to(q(".redact-2"), { skewX: 0, x: 0, duration: 0.05 }, 2.34)

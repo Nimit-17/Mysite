@@ -64,22 +64,37 @@ export default function Finale() {
       });
       gsap.set(q(".spider"), { y: -420, autoAlpha: 0 });
       gsap.set(q(".web-glow"), { autoAlpha: 0 });
+      gsap.set(q(".end-title"), { autoAlpha: 0, scale: 1.06 });
+      gsap.set(q(".end-ps"), { autoAlpha: 0 });
 
-      const tl = pinnedTimeline(root.current, { length: "+=170%", scrub: 0.6, id: "finale" });
+      const tl = pinnedTimeline(root.current, { length: "+=210%", scrub: 0.6, id: "finale" });
 
-      tl.to(q(".spoke"), { strokeDashoffset: 0, duration: 1.0, ease: "power2.inOut", stagger: 0.05 }, 0)
-        .to(q(".ring"), { strokeDashoffset: 0, duration: 1.1, ease: "power1.inOut", stagger: 0.12 }, 0.5)
-        .to(q(".spider"), { autoAlpha: 1, duration: 0.2 }, 1.3)
-        .to(q(".spider"), { y: 0, duration: 1.0, ease: "power2.out" }, 1.35)
-        .to(q(".web-glow"), { autoAlpha: 1, duration: 0.5 }, 2.2)
-        .to(q(".spider-body"), { attr: { r: 13 }, duration: 0.25, yoyo: true, repeat: 1 }, 2.25)
-        .to({}, { duration: 0.4 });
+      // the web spins itself — quick, confident
+      tl.to(q(".spoke"), { strokeDashoffset: 0, duration: 0.8, ease: "power3.inOut", stagger: 0.04 }, 0)
+        .to(q(".ring"), { strokeDashoffset: 0, duration: 0.9, ease: "power1.inOut", stagger: 0.1 }, 0.4)
+        // the spider drops fast and the thread catches hard
+        .to(q(".spider"), { autoAlpha: 1, duration: 0.15 }, 1.15)
+        .to(q(".spider"), { y: 26, duration: 0.55, ease: "power2.in" }, 1.2)
+        .to(q(".spider"), { y: 0, duration: 0.18, ease: "power2.out" }, 1.75)
+        // the web takes the weight
+        .fromTo(q(".web"), { y: 0 }, { y: 7, duration: 0.12, ease: "power2.out" }, 1.72)
+        .to(q(".web"), { y: 0, duration: 0.3, ease: "power2.out" }, 1.84)
+        .to(q(".web-glow"), { autoAlpha: 1, duration: 0.5 }, 1.9)
+        // stillness — hold the frame
+        .to({}, { duration: 0.45 })
+        // hard cut: the web recedes, the card stamps
+        .to(q(".web, .spider"), { autoAlpha: 0.22, duration: 0.35, ease: "power1.inOut" }, 2.65)
+        .to(q(".end-title"), { autoAlpha: 1, duration: 0.01, ease: "steps(1)" }, 2.8)
+        .to(q(".end-title"), { scale: 1, duration: 0.25, ease: "power3.out" }, 2.8)
+        // deadpan postscript, a beat later
+        .to(q(".end-ps"), { autoAlpha: 1, duration: 0.3 }, 3.35)
+        .to({}, { duration: 0.45 });
     }, root);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={root} className="scene theme-ink" aria-label="Closing" role="img" aria-roledescription="closing illustration">
+    <section ref={root} className="scene theme-ink" aria-label="Closing — the end">
       <div className="relative flex min-h-svh items-center justify-center">
         <svg viewBox="0 0 1000 760" className="h-svh w-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <defs>
@@ -89,12 +104,14 @@ export default function Finale() {
             </radialGradient>
           </defs>
           <rect className="web-glow" width="1000" height="760" fill="url(#webGlow)" />
+          <g className="web">
           {web.spokes.map((d, i) => (
             <path key={`s${i}`} className="strand spoke" d={d} fill="none" stroke="#d7e0e4" strokeOpacity="0.5" strokeWidth="1.1" />
           ))}
           {web.rings.map((d, i) => (
             <path key={`r${i}`} className="strand ring" d={d} fill="none" stroke="#d7e0e4" strokeOpacity="0.65" strokeWidth="1.2" />
           ))}
+          </g>
           {/* spider on a thread */}
           <g className="spider">
             <line x1={CX} y1={-260} x2={CX} y2={CY - 16} stroke="#b5e941" strokeOpacity="0.8" strokeWidth="1.4" />
@@ -117,6 +134,14 @@ export default function Finale() {
             </g>
           </g>
         </svg>
+
+        {/* the card — dry, not misty-eyed */}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center">
+          <h2 className="end-title t-display text-paper text-[clamp(3rem,1.6rem+7vw,7.5rem)]">the end.</h2>
+          <p className="end-ps t-label mt-6" style={{ color: "var(--color-venom)" }}>
+            no post-credits scene
+          </p>
+        </div>
       </div>
     </section>
   );

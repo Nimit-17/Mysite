@@ -29,18 +29,37 @@ export default function Achievements() {
 
       const tl = pinnedTimeline(root.current, { length: "+=240%", scrub: 0.6, id: "achievements" });
 
+      // scoreboard language: each entry lands, then its number tallies up
+      const count = (sel, to, format, at) => {
+        const el = q(sel)[0];
+        const o = { v: 0 };
+        el.textContent = format(0);
+        tl.to(o, {
+          v: to,
+          duration: 0.55,
+          ease: "power1.out",
+          onUpdate: () => {
+            el.textContent = format(o.v);
+          },
+        }, at);
+      };
+
       tl.to(q(".ach-title .w"), { yPercent: 0, autoAlpha: 1, duration: 0.5, stagger: 0.06, ease: "power4.out" }, 0)
 
         .to(q(".ach-1"), { yPercent: 0, autoAlpha: 1, rotate: 0, duration: 0.6, ease: "back.out(1.9)" }, 0.8)
-        .to(q(".photo-lego"), { autoAlpha: 1, rotate: -6, yPercent: 0, scale: 1, duration: 0.6, ease: "back.out(1.7)" }, 1.0)
+        .to(q(".photo-lego"), { autoAlpha: 1, rotate: -6, yPercent: 0, scale: 1, duration: 0.6, ease: "back.out(1.7)" }, 1.0);
+      count(".num-1", 100, (v) => `${Math.round(v)}+`, 0.95);
 
-        .to(q(".ach-2"), { yPercent: 0, autoAlpha: 1, rotate: 0, duration: 0.6, ease: "back.out(1.9)" }, 1.7)
+      tl.to(q(".ach-2"), { yPercent: 0, autoAlpha: 1, rotate: 0, duration: 0.6, ease: "back.out(1.9)" }, 1.7)
         .set(q(".trophy-ring"), { autoAlpha: 1 }, 2.15)
-        .to(q(".trophy-ring"), { strokeDashoffset: 0, duration: 0.45, ease: "power2.inOut" }, 2.15)
+        .to(q(".trophy-ring"), { strokeDashoffset: 0, duration: 0.45, ease: "power2.inOut" }, 2.15);
+      count(".num-2", 11, (v) => `${Math.round(v)}k+`, 1.85);
 
-        .to(q(".ach-3"), { yPercent: 0, autoAlpha: 1, rotate: 0, duration: 0.6, ease: "back.out(1.9)" }, 2.6)
-        .to(q(".zzz span"), { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" }, 3.0)
-        .to({}, { duration: 0.5 });
+      tl.to(q(".ach-3"), { yPercent: 0, autoAlpha: 1, rotate: 0, duration: 0.6, ease: "back.out(1.9)" }, 2.6)
+        .to(q(".zzz span"), { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" }, 3.0);
+      count(".num-3", 14, (v) => `${Math.round(v)}+`, 2.75);
+
+      tl.to({}, { duration: 0.5 });
     }, root);
     return () => ctx.revert();
   }, []);
@@ -57,14 +76,14 @@ export default function Achievements() {
             <li className="ach-item ach-1 flex items-baseline gap-4 md:gap-8">
               <span className="t-label text-ink-soft">001</span>
               <span className="t-scene text-[clamp(1.6rem,1rem+2.6vw,3.2rem)]">
-                <span className="text-rust font-extrabold">100+</span> LEGO minifigures
+                <span className="num-1 count text-rust font-extrabold" style={{ minWidth: "2.3em" }}>100+</span> LEGO minifigures
               </span>
             </li>
             <li className="ach-item ach-2 flex items-baseline gap-4 md:gap-8">
               <span className="t-label text-ink-soft">002</span>
               <span className="t-scene text-[clamp(1.9rem,1.1rem+3.4vw,4.2rem)]">
                 <span className="relative inline-block">
-                  <span className="text-rust font-extrabold">11k+</span>
+                  <span className="num-2 count text-rust font-extrabold" style={{ minWidth: "2.2em" }}>11k+</span>
                   <svg className="pointer-events-none absolute -inset-x-[14%] -inset-y-[18%] h-[136%] w-[128%] overflow-visible" viewBox="0 0 120 60" preserveAspectRatio="none" aria-hidden="true">
                     <path
                       className="trophy-ring"
@@ -82,7 +101,7 @@ export default function Achievements() {
             <li className="ach-item ach-3 flex items-baseline gap-4 md:gap-8">
               <span className="t-label text-ink-soft">003</span>
               <span className="t-scene text-[clamp(2.2rem,1.2rem+4.2vw,5rem)]">
-                Can sleep <span className="text-rust font-extrabold">14+</span> hours straight
+                Can sleep <span className="num-3 count text-rust font-extrabold" style={{ minWidth: "1.6em" }}>14+</span> hours straight
                 <span className="zzz ml-3 inline-block text-venom-deep" aria-hidden="true">
                   <span className="inline-block text-[0.5em]">z</span>
                   <span className="inline-block text-[0.7em]">z</span>
