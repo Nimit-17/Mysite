@@ -21,13 +21,16 @@ export default function Sense() {
       const q = self.selector;
 
       splitWords(q(".setup")[0]);
+      const forgetWords = Array.from(splitWords(q(".forget")[0]));
+      const keptWord = forgetWords.find((w) => w.textContent === "forget");
+      const lostWords = forgetWords.filter((w) => w !== keptWord);
       gsap.set(q(".setup .w"), { yPercent: 120, autoAlpha: 0 });
       gsap.set(q(".punch"), { scale: 1.6, autoAlpha: 0, rotate: -5 });
       gsap.set(q(".exit-sign"), { autoAlpha: 0 });
       gsap.set(q(".photo-pool"), { yPercent: 18, rotate: 4, autoAlpha: 0 });
       gsap.set(q(".photo-bed"), { yPercent: 24, rotate: -5, autoAlpha: 0 });
       gsap.set(q(".note"), { yPercent: -40, rotate: -8, autoAlpha: 0 });
-      gsap.set(q(".forget"), { autoAlpha: 0, y: 10 });
+      gsap.set(forgetWords, { autoAlpha: 0, y: 16 });
 
       const tl = pinnedTimeline(root.current, { length: "+=300%", scrub: 0.6, id: "sense" });
 
@@ -43,13 +46,23 @@ export default function Sense() {
         // the "can we leave yet" stare
         .to(q(".photo-bed"), { yPercent: 0, rotate: 3, autoAlpha: 1, duration: 0.7, ease: "power3.out" }, 1.6)
 
-        // beat 2 — the exit clears out, the memory gag takes the stage
+        // beat 2 — the exit clears out (setup line included), the memory gag takes the stage
+        .to(q(".setup"), { autoAlpha: 0, y: -20, duration: 0.6, ease: "power2.in" }, 2.6)
         .to(q(".punch-group"), { yPercent: -30, autoAlpha: 0, duration: 0.6, ease: "power2.in" }, 2.6)
         .to(q(".note"), { yPercent: 0, rotate: -2.5, autoAlpha: 1, duration: 0.5, ease: "back.out(2)" }, 3.0)
         // ...sits for a beat, then slips off, forgotten
         .to(q(".note"), { yPercent: 150, rotate: 13, autoAlpha: 0, duration: 0.55, ease: "power2.in" }, 3.9)
-        // the deadpan lands flat on purpose — no bounce, no decoration
-        .to(q(".forget"), { autoAlpha: 1, y: 0, duration: 0.35, ease: "power1.out" }, 4.35)
+        // the punchline about forgetting lands...
+        .to(forgetWords, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.06, ease: "power2.out" }, 4.35)
+        // ...then forgets itself — words ghost out in random order, only "forget" stays
+        .to(lostWords, {
+          autoAlpha: 0.12,
+          y: 6,
+          duration: 0.45,
+          stagger: { each: 0.09, from: "random" },
+          ease: "power1.inOut",
+        }, 5.5)
+        .to(keptWord, { color: "var(--color-venom-deep)", duration: 0.3 }, 5.9)
         .to({}, { duration: 0.5 });
     }, root);
     return () => ctx.revert();
@@ -92,7 +105,7 @@ export default function Sense() {
               <div className="note sticker t-scene w-fit max-w-full self-start text-[clamp(1.1rem,0.85rem+1.3vw,1.9rem)] [grid-area:1/1]">
                 I make a list of things to remember
               </div>
-              <p className="forget t-scene self-start pt-16 text-[clamp(1.1rem,0.85rem+1.3vw,1.9rem)] [grid-area:1/1] md:pt-20">
+              <p className="forget t-scene self-start pt-16 text-[clamp(1.4rem,1rem+2.2vw,2.8rem)] [grid-area:1/1] md:pt-20">
                 and then forget about the list
               </p>
             </div>
