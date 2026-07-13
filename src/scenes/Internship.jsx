@@ -30,7 +30,6 @@ export default function Internship() {
       gsap.set(q(".i-sub"), { autoAlpha: 0 });
       gsap.set(q(".photo-warm"), { autoAlpha: 0 });
       gsap.set(q(".photo-warm img"), { filter: "brightness(1.65) saturate(0.55)", scale: 1.06 });
-      gsap.set(q(".i-tick"), { autoAlpha: 0, scale: 0.5 });
       gsap.set(q(".i-caret"), { autoAlpha: 0 });
       // lines start blank and type in; full text lives in data-text
       q(".i-text").forEach((el) => {
@@ -49,19 +48,13 @@ export default function Internship() {
         .to(q(".i-sub .redact"), { skewX: -12, x: 3, duration: 0.05, ease: "steps(1)" }, 1.2)
         .to(q(".i-sub .redact"), { skewX: 0, x: 0, duration: 0.05 }, 1.26);
 
-      // each worklog line types in behind its caret, then gets ticked off
+      // each worklog line types in behind its caret
       rows.forEach((row, i) => {
         const at = 1.45 + i * 0.85;
         const text = row.querySelector(".i-text");
         tl.set(row.querySelector(".i-caret"), { autoAlpha: 1 }, at)
           .to(text, { text: text.dataset.text, duration: 0.6, ease: "none" }, at)
-          .set(row.querySelector(".i-caret"), { autoAlpha: 0 }, at + 0.62)
-          .fromTo(
-            row.querySelector(".i-tick"),
-            { autoAlpha: 0, scale: 0.5 },
-            { autoAlpha: 1, scale: 1, duration: 0.18, ease: "power3.out" },
-            at + 0.66
-          );
+          .set(row.querySelector(".i-caret"), { autoAlpha: 0 }, at + 0.62);
       });
 
       tl.to({}, { duration: 0.5 });
@@ -97,9 +90,6 @@ export default function Internship() {
                       <span className="i-text">{line}</span>
                       <span className="i-caret" aria-hidden="true" />
                     </span>
-                  </span>
-                  <span className="i-tick t-label ml-auto mt-1 shrink-0 text-rust-deep" aria-hidden="true">
-                    done
                   </span>
                 </li>
               ))}

@@ -332,9 +332,6 @@ body {
   flex-direction: column;
   gap: 1.25rem;
 }
-.reduced-motion .beat-stack .exit-beat {
-  padding-top: 0;
-}
 .reduced-motion .i-caret {
   display: none;
 }
@@ -345,4 +342,9 @@ body {
   body {
     font-size: 16px;
   }
+}
+
+/* unlayered so it outranks the pt-* utility on the forget beat */
+.reduced-motion .beat-stack .forget {
+  padding-top: 0;
 }
