@@ -101,13 +101,9 @@ export default function Preloader() {
   if (!active) return null;
 
   return (
-    <div
-      ref={root}
-      className="grain fixed inset-0 z-[80] bg-cloud"
-      role="presentation"
-      aria-hidden="true"
-    >
-      <div className="pl-stage absolute inset-0">
+    <div ref={root} className="grain fixed inset-0 z-[80] bg-cloud">
+      {/* decorative stage is hidden from AT; the skip button stays reachable */}
+      <div className="pl-stage absolute inset-0" aria-hidden="true">
         <svg
           className="h-full w-full"
           viewBox="0 0 1000 660"
@@ -145,6 +141,7 @@ export default function Preloader() {
 
       <button
         type="button"
+        aria-label="Skip intro"
         className="pl-skip t-label absolute bottom-6 right-6 cursor-pointer border-0 bg-transparent p-2 text-ink-soft opacity-0 hover:text-ink"
         onClick={() => skipFn.current()}
       >

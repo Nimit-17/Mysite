@@ -7,7 +7,7 @@ import bed from "../../assets/photos/bed-stare.webp";
  * Scene 02 — Spidey sense. Motion language: reflex — comic-strip snap
  * timing where the jokes land on pauses, not effects.
  * Beats: the exit-sign punchline → it clears out for the memory gag
- * (a note slaps in, then literally slips away, forgotten).
+ * (the list card slaps in, then its ink follow-up undercuts it).
  */
 export default function Sense() {
   const root = useRef(null);

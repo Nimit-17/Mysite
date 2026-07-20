@@ -83,12 +83,13 @@ export default function Internship() {
               {LINES.map((line, i) => (
                 <li key={i} className="i-row flex items-start gap-4 border-l-2 border-rust pl-4">
                   <span className="t-label mt-1 shrink-0 text-rust">{String(i + 1).padStart(2, "0")}</span>
-                  {/* invisible ghost reserves the wrapped height; typed text overlays it */}
+                  {/* transparent ghost reserves the wrapped height and stays readable
+                      to screen readers; the typed overlay is presentation only */}
                   <span className="t-body relative min-w-0 flex-1">
-                    <span className="invisible" aria-hidden="true">{line}</span>
-                    <span className="absolute inset-0">
+                    <span className="pointer-events-none opacity-0">{line}</span>
+                    <span className="absolute inset-0" aria-hidden="true">
                       <span className="i-text">{line}</span>
-                      <span className="i-caret" aria-hidden="true" />
+                      <span className="i-caret" />
                     </span>
                   </span>
                 </li>
