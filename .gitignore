@@ -1,0 +1,10 @@
+# local Claude Code state (launch.json is shared on purpose)
+.claude/settings.local.json
+
+# OS / editor cruft
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+
+node_modules/
