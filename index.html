@@ -138,6 +138,7 @@ const VID_W = 1920, VID_H = 1080;
    the hand-off from jumping. */
 const CARD_IN_VID_H = 0.94 * VID_H * (VIS_H / SRC_H);   // 1007.05
 
+const PLAYBACK = 0.75;                         // intro speed
 const NAME = 'Nimit Limbachiya';
 const GOLD = 'rgb(255,175,95)', GOLD_HI = 'rgb(255,210,130)';
 
@@ -672,6 +673,7 @@ function startIntro() {
   if (REDUCED || videoFailed) { toCard(); return; }
   state = 'intro'; seenTime = -1; seenAt = performance.now();
   vid.currentTime = 0;
+  vid.playbackRate = PLAYBACK;
   const p = vid.play();
   if (p && p.catch) p.catch(() => failVideo('play() rejected'));
 }
@@ -753,8 +755,14 @@ function frame(now) {
     if (xfade > 0) {
       xfade = Math.min(1, xfade + dt / 0.26);
       const e = smooth(0, 1, xfade);
+      /* Order matters. Drawing the video at (1-e) and the card at e composites
+         each against the embers separately, so the result is
+         C*e + V*(1-e)^2 + B*e*(1-e) -- at the midpoint the card is only 75%
+         covered and the background bleeds through as a visible dip. Laying the
+         card down opaque first and dissolving the video over it gives
+         V*(1-e) + C*e, which holds full opacity the whole way across. */
+      drawCard(1);
       drawVideo(1 - e);
-      drawCard(e);
       if (xfade >= 1) toCard();
     } else if (!drawVideo(1)) {
       drawCard(1);                              // first frames not decoded yet

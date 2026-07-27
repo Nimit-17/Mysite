@@ -44,14 +44,30 @@ screen readers and crawlers.
 |---|---|
 | `card.webp` | 1053×1494, q92, 246 KB. What actually loads. |
 | `card.png` | The master. 2271 KB. Fallback if WebP fails. |
-| `intro.webm` | VP9 **with an alpha channel**, so the card floats over the embers. |
-| `intro.mp4` | H.264, no alpha. Not referenced — kept as the master for a future export. |
+| `intro.webm` | VP9 **with an alpha channel**, so the card floats over the embers. 44 frames at 30fps, played at 0.75× → 1.95s. |
+| `intro.mp4` | H.264, no alpha, **pre-edit**. Not referenced; kept as the original capture. |
 
 Two numbers in `index.html` are measured from `card.png` and must be re-measured
 if the card art is re-exported: a **6px black margin** on all four edges, and a
 **79px corner radius** on the cropped card. The file has no alpha channel, so
 anything outside the card's silhouette is opaque black — both values are cropped
 and masked at runtime. Get them wrong and a black frame shows up against the embers.
+
+### The intro was re-cut
+
+The original capture ended on a card that carried three defects, all visible
+against the embers: the black margin baked into its silhouette as a rim, a
+sliver of the throwing arm still in frame at the right, and an opaque black
+matte below the card running to the bottom edge. The card is motionless from
+frame 40 and within 1% of its final size by frame 30, so frames 30–40 dissolve
+from the original into a card composited fresh from `card.png` — cropped,
+corner-rounded, and placed at 707×1007 centred on (959.5, 539.5). Frames 41–44
+are that clean card; everything after was a redundant freeze and was trimmed.
+
+Because the last frame is now generated from the same source as the canvas card,
+the two agree by construction: measured on screen, their centres differ by 0.4px
+and their heights are identical. `CARD_IN_VID_H` encodes that height and is the
+single number tying the video to the canvas.
 
 ## Safari
 
