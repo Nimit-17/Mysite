@@ -31,12 +31,51 @@ Scroll (or arrow keys / space) drives a single `progress` value from 0 to 1:
 
 | progress | what happens |
 |---|---|
-| 0 → 0.5 | the card erases cell by cell, each freed cell becoming a drifting particle |
-| 0.5 → 1 | particles turn gold and converge on sampled glyph positions |
-| 0.88 → 1 | the particle name crossfades into the real `<h1>` |
+| 0 → 0.5 | the card erases cell by cell, each freed cell becoming a shard that bursts outward and warms to ember gold |
+| 0.5 → 1 | the same shards change direction and gather onto sampled glyph positions |
 
-The name is a DOM heading, not canvas pixels, so it is selectable and reaches
-screen readers and crawlers.
+The two halves are one continuous motion, which takes some care: a shard's
+alpha, size and colour at the end of the dissolve have to be *exactly* what the
+reassembly starts from, or the hand-off flickers. Alpha dims toward a floor
+pinned to a quantisation step rather than to zero, size settles at `DUST_SZ`,
+and the colour ramp is baked per alpha step so a shard is already gold by the
+time it detaches. Shards also burst sideways rather than upward — the original
+motion carried them 0.55–1.25 card heights up, which on any real viewport is
+straight off the top edge, so the screen emptied before the name formed.
+
+## The wordmark
+
+The name is spelled in dust, never set as type — that is the point of the piece.
+It is Cormorant Garamond Light, "Nimit" roman and *"Limbachiya"* italic, tracked
+`-0.035em`, carrying the seven-stop gold gradient on a 14s sheen.
+
+The outlines are **baked to a path** (`NAME_D`) rather than loaded as a webfont.
+The string never changes, and outlines mean no network request, no FOUT, and no
+race between the font arriving and the dust being sampled from it. Rebuild with
+`tools/genpath.mjs` if the name or the face ever changes.
+
+Two details worth keeping: the glyphs are sampled at **full** resolution, unlike
+the card — Cormorant Light is a hairline face, and at half scale its thin strokes
+antialias below the alpha threshold and whole stems drop out. And the number of
+shards recruited into the name is capped at 70%, so a large viewport can't
+consume every shard and leave none behind to drift off.
+
+An `<h1>` stays in the DOM, visually hidden, carrying the same words for screen
+readers and crawlers that the shards spell out visually.
+
+## The flame
+
+A golden flame burns at the foot of the frame, and the embers are now reborn
+inside it rather than drifting up from nothing — 62% of them respawn within its
+width, the rest anywhere, so it reads as their source without the field looking
+like it funnels through a single point. It brightens as the card goes.
+
+One teardrop sprite is generated once and stamped twelve times a frame at
+wobbling sizes, so the whole thing costs a handful of `drawImage` calls rather
+than a gradient per tongue. The shape matters more than the count: a sharp taper
+and evenly spread tongues read as a row of candles, so the sprite is deliberately
+blunt with a soft shoulder, and the licks are clustered toward the middle by a
+triangular distribution over a wide low bed that gives the fire one body.
 
 ## Assets
 

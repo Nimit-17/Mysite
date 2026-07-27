@@ -137,7 +137,31 @@ const CARD_IN_VID_H = 0.94 * VID_H * (VIS_H / SRC_H);   // 1007.05
 
 const PLAYBACK = 0.75;                         // intro speed
 const NAME = 'Nimit Limbachiya';
-const GOLD = 'rgb(255,175,95)', GOLD_HI = 'rgb(255,210,130)';
+const GOLD = 'rgb(255,175,95)';                 // the flat gold shards fly as
+
+/* The wordmark's gold, lifted from the hero design: a seven-stop gradient that
+   starts and ends on the same colour so it can be sampled as a loop, and swept
+   across the name on a 14s cycle for the sheen. Baked to a lookup table once,
+   so animating it costs a handful of colour reads per frame instead of a
+   gradient object. */
+const GOLD_STOPS = [
+  [0.00, 0x8f, 0x6a, 0x22], [0.18, 0xd8, 0xab, 0x45], [0.34, 0xfd, 0xf0, 0xc0],
+  [0.50, 0xe0, 0xb7, 0x4f], [0.68, 0xa9, 0x7a, 0x24], [0.86, 0xf6, 0xdd, 0x94],
+  [1.00, 0x8f, 0x6a, 0x22],
+];
+const LUT_N = 128, NAME_BANDS = 16, SHEEN_SEC = 14;
+const goldLUT = (() => {
+  const t = new Array(LUT_N);
+  for (let i = 0; i < LUT_N; i++) {
+    const u = i / LUT_N;
+    let k = 0;
+    while (k < GOLD_STOPS.length - 2 && u > GOLD_STOPS[k + 1][0]) k++;
+    const a = GOLD_STOPS[k], b = GOLD_STOPS[k + 1];
+    const f = (u - a[0]) / (b[0] - a[0]);
+    t[i] = [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f];
+  }
+  return t;
+})();
 
 let W = 0, H = 0, dpr = 1, mx = 0.5, my = 0.5, portrait = false;
 let card = { x: 0, y: 0, w: 0, h: 0 };
@@ -170,31 +194,57 @@ function layoutCard() {
   card = { x: (W - w) / 2, y: (H - h) / 2, w, h };
 }
 
-/* ------------------------------------------------------------- text targets */
-const TS = 0.5;                                 // sample at half res
-let textPts = [];
+/* ------------------------------------------------------------- text targets
+   The name is set in Cormorant Garamond Light -- "Nimit" roman, "Limbachiya"
+   italic, tracked -0.035em -- baked to outlines at build time rather than
+   loaded as a webfont. The string never changes, and outlines mean no network
+   request, no FOUT, and no race between the font arriving and the dust being
+   sampled. Regenerate with tools/genpath.mjs if the name or face ever changes. */
+const NAME_D = 'M118 -104L118 -602L140 -600L140 -104Q140 -53 157 -32.5Q174 -12 216 -12Q219 -12 219 -6Q219 0 216 0Q197 0 176.5 -1Q156 -2 131 -2Q107 -2 85 -1Q63 0 43 0Q41 0 41 -6Q41 -12 43 -12Q87 -12 102.5 -32.5Q118 -53 118 -104ZM621 11Q621 13 616 13.5Q611 14 609 13L157 -543Q123 -584 96.5 -598.5Q70 -613 46 -613Q43 -613 43 -619Q43 -625 46 -625Q63 -625 81 -624Q99 -623 113 -623Q127 -623 139.5 -624Q152 -625 158 -625Q171 -625 176 -613.5Q181 -602 204 -573L613 -65ZM621 -520L621 11L599 -20L599 -520Q599 -571 583 -592Q567 -613 525 -613Q523 -613 523 -619Q523 -625 525 -625Q545 -625 565.5 -623.5Q586 -622 611 -622Q634 -622 657 -623.5Q680 -625 699 -625Q702 -625 702 -619Q702 -613 699 -613Q656 -613 638.5 -592Q621 -571 621 -520ZM747 0Q745 0 745 -6Q745 -12 747 -12Q788 -12 800.5 -25Q813 -38 813 -81L813 -270Q813 -306 806 -322.5Q799 -339 780 -339Q771 -339 759.5 -335.5Q748 -332 732 -324Q728 -323 725.5 -328.5Q723 -334 727 -336L851 -394Q854 -395 855 -395Q857 -395 859.5 -393Q862 -391 862 -388Q862 -381 861 -349.5Q860 -318 860 -271L860 -81Q860 -38 871.5 -25Q883 -12 925 -12Q928 -12 928 -6Q928 0 925 0Q908 0 885 -1Q862 -2 836 -2Q811 -2 788 -1Q765 0 747 0ZM828 -516Q809 -516 798.5 -526Q788 -536 788 -554Q788 -572 798.5 -582Q809 -592 828 -592Q846 -592 856 -582Q866 -572 866 -554Q866 -516 828 -516ZM1490 0Q1488 0 1488 -6Q1488 -12 1490 -12Q1531 -12 1543.5 -25Q1556 -38 1556 -81L1556 -244Q1556 -363 1467 -363Q1430 -363 1392.5 -337.5Q1355 -312 1326 -269L1322 -281Q1368 -343 1409.5 -369.5Q1451 -396 1494 -396Q1546 -396 1574.5 -366.5Q1603 -337 1603 -275L1603 -81Q1603 -38 1614.5 -25Q1626 -12 1668 -12Q1671 -12 1671 -6Q1671 0 1668 0Q1651 0 1628 -1Q1605 -2 1579 -2Q1554 -2 1531 -1Q1508 0 1490 0ZM1233 0Q1230 0 1230 -6Q1230 -12 1233 -12Q1274 -12 1286 -25Q1298 -38 1298 -81L1298 -244Q1298 -363 1210 -363Q1173 -363 1135.5 -337.5Q1098 -312 1069 -269L1065 -281Q1110 -343 1151.5 -369.5Q1193 -396 1236 -396Q1288 -396 1316.5 -366.5Q1345 -337 1345 -275L1345 -81Q1345 -38 1357 -25Q1369 -12 1411 -12Q1413 -12 1413 -6Q1413 0 1411 0Q1393 0 1370.5 -1Q1348 -2 1322 -2Q1297 -2 1273.5 -1Q1250 0 1233 0ZM976 0Q973 0 973 -6Q973 -12 976 -12Q1017 -12 1029 -25Q1041 -38 1041 -81L1041 -281Q1041 -315 1033 -330.5Q1025 -346 1005 -346Q995 -346 981 -342Q967 -338 949 -331Q945 -330 942.5 -335Q940 -340 944 -342L1055 -394Q1057 -395 1060 -395Q1067 -395 1077.5 -374.5Q1088 -354 1088 -315L1088 -81Q1088 -38 1099.5 -25Q1111 -12 1153 -12Q1156 -12 1156 -6Q1156 0 1153 0Q1136 0 1113 -1Q1090 -2 1065 -2Q1040 -2 1016.5 -1Q993 0 976 0ZM1712 0Q1710 0 1710 -6Q1710 -12 1712 -12Q1753 -12 1765.5 -25Q1778 -38 1778 -81L1778 -270Q1778 -306 1771 -322.5Q1764 -339 1745 -339Q1736 -339 1724.5 -335.5Q1713 -332 1697 -324Q1693 -323 1690.5 -328.5Q1688 -334 1692 -336L1816 -394Q1819 -395 1820 -395Q1822 -395 1824.5 -393Q1827 -391 1827 -388Q1827 -381 1826 -349.5Q1825 -318 1825 -271L1825 -81Q1825 -38 1836.5 -25Q1848 -12 1890 -12Q1893 -12 1893 -6Q1893 0 1890 0Q1873 0 1850 -1Q1827 -2 1801 -2Q1776 -2 1753 -1Q1730 0 1712 0ZM1793 -516Q1774 -516 1763.5 -526Q1753 -536 1753 -554Q1753 -572 1763.5 -582Q1774 -592 1793 -592Q1811 -592 1821 -582Q1831 -572 1831 -554Q1831 -516 1793 -516ZM2084 12Q2060 12 2038.5 4.5Q2017 -3 2004 -20.5Q1991 -38 1991 -68L1991 -306Q1991 -331 1988 -342.5Q1985 -354 1974 -357.5Q1963 -361 1939 -361Q1936 -361 1936 -367Q1936 -373 1939 -373Q1977 -373 2000.5 -394Q2024 -415 2024 -447Q2024 -450 2031.5 -450Q2039 -450 2039 -447L2039 -102Q2039 -60 2059.5 -39.5Q2080 -19 2120 -19Q2147 -19 2167.5 -27.5Q2188 -36 2201 -46Q2205 -48 2208 -43.5Q2211 -39 2207 -36Q2170 -10 2142 1Q2114 12 2084 12ZM2177 -338Q2138 -348 2102.5 -350.5Q2067 -353 2027 -353L2027 -374Q2066 -374 2102.5 -377Q2139 -380 2180 -384Q2183 -384 2185 -377.5Q2187 -371 2187 -361Q2187 -354 2184 -345.5Q2181 -337 2177 -338ZM2410 0Q2407 0 2407 -6Q2407 -12 2410 -12Q2442 -12 2459 -17Q2476 -22 2484 -37Q2492 -52 2497 -81L2579 -544Q2587 -587 2575.5 -600Q2564 -613 2516 -613Q2514 -613 2514 -619Q2514 -625 2516 -625Q2536 -625 2560.5 -623.5Q2585 -622 2613 -622Q2642 -622 2668.5 -623.5Q2695 -625 2714 -625Q2716 -625 2716 -619Q2716 -613 2714 -613Q2682 -613 2664.5 -607.5Q2647 -602 2639.5 -587Q2632 -572 2626 -543L2545 -85Q2538 -43 2549 -30.5Q2560 -18 2607 -18L2727 -18Q2781 -18 2812 -54Q2843 -90 2859 -147Q2859 -150 2865.5 -149Q2872 -148 2871 -145Q2863 -119 2854 -82.5Q2845 -46 2840 -15Q2837 0 2824 0ZM2967 9Q2945 9 2937.5 -11Q2930 -31 2941 -89L2982 -297Q2994 -358 2965 -358Q2953 -358 2934 -346Q2915 -334 2893 -311Q2890 -307 2885.5 -311.5Q2881 -316 2885 -319Q2919 -357 2946.5 -376Q2974 -395 2999 -395Q3023 -395 3029 -373.5Q3035 -352 3024 -297L2984 -89Q2978 -58 2983 -43Q2988 -28 3001 -28Q3012 -28 3031 -40Q3050 -52 3072 -75Q3076 -79 3080 -74.5Q3084 -70 3080 -67Q3047 -29 3019.5 -10Q2992 9 2967 9ZM3029 -517Q3010 -517 2999.5 -527Q2989 -537 2989 -556Q2989 -573 2999.5 -583Q3010 -593 3029 -593Q3048 -593 3058 -583Q3068 -573 3068 -556Q3068 -517 3029 -517ZM3615 9Q3592 9 3586.5 -12.5Q3581 -34 3591 -89L3620 -248Q3630 -307 3621.5 -336Q3613 -365 3584 -365Q3552 -365 3516 -323Q3480 -281 3448.5 -200.5Q3417 -120 3396 -6L3386 -7Q3406 -123 3441 -211.5Q3476 -300 3520 -349.5Q3564 -399 3612 -399Q3652 -399 3664.5 -368.5Q3677 -338 3665 -267L3633 -89Q3628 -58 3632.5 -43Q3637 -28 3649 -28Q3661 -28 3679 -41.5Q3697 -55 3719 -77Q3723 -81 3727 -77Q3731 -73 3727 -69Q3694 -32 3667.5 -11.5Q3641 9 3615 9ZM3151 8Q3138 8 3134.5 6.5Q3131 5 3131 2Q3131 -1 3136 -23.5Q3141 -46 3145 -68L3187 -297Q3197 -358 3170 -358Q3158 -358 3139 -346Q3120 -334 3098 -311Q3095 -307 3090.5 -311.5Q3086 -316 3090 -319Q3123 -357 3151.5 -376Q3180 -395 3205 -395Q3228 -395 3233.5 -373.5Q3239 -352 3229 -297L3177 -6Q3174 8 3151 8ZM3371 8Q3358 8 3354.5 6.5Q3351 5 3351 2Q3351 -1 3356.5 -26.5Q3362 -52 3366 -74L3398 -248Q3406 -307 3398.5 -336Q3391 -365 3364 -365Q3333 -365 3297 -323Q3261 -281 3229.5 -200.5Q3198 -120 3177 -6L3166 -7Q3186 -123 3221 -211.5Q3256 -300 3300 -349.5Q3344 -399 3392 -399Q3430 -399 3443.5 -368.5Q3457 -338 3443 -267L3396 -6Q3394 8 3371 8ZM3853 13Q3805 13 3778.5 -10.5Q3752 -34 3759 -75L3864 -627Q3870 -659 3854.5 -668Q3839 -677 3792 -654Q3788 -652 3786 -658Q3784 -664 3788 -665L3910 -725Q3914 -727 3918 -723Q3922 -719 3921 -717L3807 -96Q3801 -59 3825.5 -35.5Q3850 -12 3895 -12Q3928 -12 3961.5 -36.5Q3995 -61 4021.5 -107.5Q4048 -154 4060 -220Q4068 -258 4065.5 -289.5Q4063 -321 4048 -340Q4033 -359 4002 -359Q3959 -359 3920 -326Q3881 -293 3851.5 -234Q3822 -175 3807 -96L3802 -116Q3811 -173 3834 -224.5Q3857 -276 3890 -315Q3923 -354 3961.5 -376.5Q4000 -399 4039 -399Q4086 -399 4108 -357.5Q4130 -316 4116 -251Q4103 -186 4073.5 -136.5Q4044 -87 4005.5 -54Q3967 -21 3927 -4Q3887 13 3853 13ZM4183 13Q4151 13 4134.5 -11Q4118 -35 4125 -91Q4133 -146 4159.5 -200.5Q4186 -255 4223.5 -300Q4261 -345 4303.5 -372Q4346 -399 4385 -399Q4403 -399 4420 -392.5Q4437 -386 4449 -371Q4461 -356 4463 -332L4425 -357Q4436 -359 4452 -373.5Q4468 -388 4471 -407Q4473 -410 4478.5 -409Q4484 -408 4483 -406L4425 -89Q4415 -28 4441 -28Q4453 -28 4471 -41.5Q4489 -55 4511 -77Q4514 -80 4518 -76Q4522 -72 4519 -69Q4486 -32 4459.5 -11.5Q4433 9 4407 9Q4384 9 4378.5 -12.5Q4373 -34 4383 -89L4407 -229L4423 -246Q4392 -172 4351.5 -113Q4311 -54 4267.5 -20.5Q4224 13 4183 13ZM4212 -30Q4241 -30 4272.5 -52.5Q4304 -75 4333.5 -112Q4363 -149 4385 -194Q4407 -239 4416 -283Q4424 -318 4408.5 -343Q4393 -368 4354 -367Q4318 -366 4279.5 -334Q4241 -302 4211.5 -248.5Q4182 -195 4172 -127Q4165 -80 4174 -55Q4183 -30 4212 -30ZM4656 13Q4614 13 4586.5 -6.5Q4559 -26 4545.5 -58Q4532 -90 4530 -128Q4528 -166 4536 -202Q4550 -266 4584 -309.5Q4618 -353 4662 -376Q4706 -399 4748 -399Q4772 -399 4792 -391.5Q4812 -384 4823 -371Q4834 -358 4832 -342Q4831 -331 4824.5 -322Q4818 -313 4804 -313Q4793 -313 4784.5 -320.5Q4776 -328 4771 -342Q4768 -353 4755 -366Q4742 -379 4715 -379Q4679 -379 4653.5 -358.5Q4628 -338 4612.5 -305Q4597 -272 4589 -232Q4579 -177 4585.5 -128Q4592 -79 4618.5 -48.5Q4645 -18 4693 -18Q4730 -18 4756 -33.5Q4782 -49 4804 -67Q4807 -69 4811 -65Q4815 -61 4812 -58Q4770 -21 4731.5 -4Q4693 13 4656 13ZM4873 8Q4860 8 4856 6.5Q4852 5 4852 2Q4852 -1 4857.5 -24.5Q4863 -48 4867 -74L4971 -627Q4978 -659 4962.5 -668Q4947 -677 4900 -654Q4896 -652 4893.5 -658Q4891 -664 4895 -665L5018 -725Q5022 -727 5026 -723Q5030 -719 5029 -717L4899 -6Q4897 8 4873 8ZM5126 9Q5102 9 5096.5 -12.5Q5091 -34 5101 -89L5130 -248Q5141 -307 5132 -336Q5123 -365 5091 -365Q5058 -365 5021.5 -323Q4985 -281 4952.5 -200.5Q4920 -120 4899 -6L4888 -7Q4909 -123 4944.5 -211.5Q4980 -300 5025 -349.5Q5070 -399 5119 -399Q5162 -399 5175 -368.5Q5188 -338 5176 -267L5143 -89Q5138 -58 5142.5 -43Q5147 -28 5160 -28Q5172 -28 5190 -41.5Q5208 -55 5230 -77Q5234 -81 5238 -77Q5242 -73 5238 -69Q5205 -32 5178.5 -11.5Q5152 9 5126 9ZM5328 9Q5306 9 5298.5 -11Q5291 -31 5302 -89L5343 -297Q5355 -358 5326 -358Q5314 -358 5295 -346Q5276 -334 5254 -311Q5251 -307 5246.5 -311.5Q5242 -316 5246 -319Q5280 -357 5307.5 -376Q5335 -395 5360 -395Q5384 -395 5390 -373.5Q5396 -352 5385 -297L5345 -89Q5339 -58 5344 -43Q5349 -28 5362 -28Q5373 -28 5392 -40Q5411 -52 5433 -75Q5437 -79 5441 -74.5Q5445 -70 5441 -67Q5408 -29 5380.5 -10Q5353 9 5328 9ZM5390 -517Q5371 -517 5360.5 -527Q5350 -537 5350 -556Q5350 -573 5360.5 -583Q5371 -593 5390 -593Q5409 -593 5419 -583Q5429 -573 5429 -556Q5429 -517 5390 -517ZM5411 281Q5395 281 5384.5 272Q5374 263 5376 244Q5382 222 5411 222Q5432 222 5453.5 218.5Q5475 215 5495 207Q5515 199 5531 188Q5553 173 5582 136.5Q5611 100 5643 52.5Q5675 5 5704 -45.5Q5733 -96 5754 -141Q5775 -186 5782 -216Q5788 -243 5787 -267.5Q5786 -292 5781 -312Q5776 -332 5772 -346.5Q5768 -361 5768 -368Q5768 -380 5776 -388Q5784 -396 5798 -396Q5818 -396 5825 -381.5Q5832 -367 5832 -345Q5832 -308 5816.5 -257Q5801 -206 5773.5 -146.5Q5746 -87 5711 -27Q5676 33 5636.5 88.5Q5597 144 5556.5 187Q5516 230 5478.5 255.5Q5441 281 5411 281ZM5617 108Q5623 -112 5591.5 -233Q5560 -354 5501 -354Q5488 -354 5474 -346Q5460 -338 5449 -316Q5447 -312 5441.5 -313.5Q5436 -315 5437 -319Q5456 -357 5476.5 -376Q5497 -395 5524 -395Q5560 -395 5587.5 -360.5Q5615 -326 5632.5 -266Q5650 -206 5657 -127.5Q5664 -49 5659 40ZM5909 13Q5877 13 5860.5 -11Q5844 -35 5851 -91Q5859 -146 5885.5 -200.5Q5912 -255 5949.5 -300Q5987 -345 6029.5 -372Q6072 -399 6111 -399Q6129 -399 6146 -392.5Q6163 -386 6175 -371Q6187 -356 6189 -332L6151 -357Q6162 -359 6178 -373.5Q6194 -388 6197 -407Q6199 -410 6204.5 -409Q6210 -408 6209 -406L6151 -89Q6141 -28 6167 -28Q6179 -28 6197 -41.5Q6215 -55 6237 -77Q6240 -80 6244 -76Q6248 -72 6245 -69Q6212 -32 6185.5 -11.5Q6159 9 6133 9Q6110 9 6104.5 -12.5Q6099 -34 6109 -89L6133 -229L6149 -246Q6118 -172 6077.5 -113Q6037 -54 5993.5 -20.5Q5950 13 5909 13ZM5938 -30Q5967 -30 5998.5 -52.5Q6030 -75 6059.5 -112Q6089 -149 6111 -194Q6133 -239 6142 -283Q6150 -318 6134.5 -343Q6119 -368 6080 -367Q6044 -366 6005.5 -334Q5967 -302 5937.5 -248.5Q5908 -195 5898 -127Q5891 -80 5900 -55Q5909 -30 5938 -30Z';
+const NAME_UPEM = 1000;
+const NAME_ADV = 6.261;                         // total advance, in em
+const NAME_BOX = { x: 41, y: -727, w: 6207, h: 1008 };   // inked box, font units
+const NAME_CX = NAME_BOX.x + NAME_BOX.w / 2;
+const NAME_CY = NAME_BOX.y + NAME_BOX.h / 2;
+
+let textPts = [], namePath = null, nameLeft = 0, nameW = 1;
+
+/* Matches the old sizing rule, rescaled for this face so the wordmark keeps the
+   footprint it had: 1.474x the previous em size lands it at the same width. */
+function nameEm(w, h) {
+  return Math.min(w * 0.1106, h * 0.2359, w * 0.86 / NAME_ADV);
+}
+
 function buildText() {
   textPts = [];
-  const tw = Math.max(1, Math.round(W * TS)), th = Math.max(1, Math.round(H * TS));
+  if (!namePath) namePath = new Path2D(NAME_D);
+  /* Sampled at full resolution, unlike the card. Cormorant Light is a hairline
+     face: at half scale its thin strokes antialias below the alpha threshold and
+     drop out of the sample entirely, so whole stems went missing from the dust. */
+  const tw = Math.max(1, W), th = Math.max(1, H);
   const o = document.createElement('canvas'); o.width = tw; o.height = th;
   const c = o.getContext('2d');
-  const setF = (v) => { c.font = `600 ${v}px Georgia, "Times New Roman", serif`; };
-  let fs = Math.min(tw * 0.075, th * 0.16);
-  c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  setF(fs);
-  while (c.measureText(NAME).width > tw * 0.86 && fs > 6) { fs -= 1; setF(fs); }
-  nameFs = fs / TS;
-  c.fillText(NAME, tw / 2, th / 2);
+  const em = nameEm(tw, th);
+  const s = em / NAME_UPEM;
+  nameFs = em;
+  c.fillStyle = '#fff';
+  c.setTransform(s, 0, 0, s, tw / 2 - NAME_CX * s, th / 2 - NAME_CY * s);
+  c.fill(namePath);
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  // where the wordmark sits — the gradient bands key off this
+  nameLeft = tw / 2 - (NAME_BOX.w / 2) * s;
+  nameW = Math.max(1, NAME_BOX.w * s);
   const d = c.getImageData(0, 0, tw, th).data;
-  const step = Math.max(1, Math.round(fs / 40));
+  // scaled with the type so the dust stays about as dense on a phone as on 1440p
+  const step = Math.max(1, Math.round(em / 85));
   for (let y = 0; y < th; y += step)
     for (let x = 0; x < tw; x += step)
-      if (d[(y * tw + x) * 4 + 3] > 128) textPts.push({ x: x / TS, y: y / TS });
+      if (d[(y * tw + x) * 4 + 3] > 100) textPts.push({ x, y });
 }
 
 /* ------------------------------------------------------------ card + dust */
 let cardCanvas = null, cardLayer = null, lctx = null;
-let particles = [], eraseCells = [], colGroups = [], textParts = [], textPartsHi = [], extraParts = [];
+let particles = [], eraseCells = [], colGroups = [], nameBands = [], extraParts = [];
 let erasePtr = 0, lastDp = -1;
 const ASTEPS = 8;                               // alpha quantisation for batching
 let scratch = [], scratchN = new Int32Array(ASTEPS);
@@ -273,7 +323,9 @@ function buildParticles() {
   /* Roughly two shards per sampled glyph point. Jittered by under a pixel so the
      pair doesn't land on exactly the same spot — the letterforms then read as
      grains of dust rather than doubled-up dots. */
-  const need = Math.min(order.length, textPts.length * 2);
+  /* Capped so a big viewport can't recruit every shard into the name — a share
+     always stays behind to drift off, which is what sells the gathering. */
+  const need = Math.min((order.length * 0.7) | 0, textPts.length * 3);
   for (let k = 0; k < need; k++) {
     const p = particles[order[k]], tp = textPts[k % textPts.length];
     p.tx = tp.x + (rnd() - 0.5) * 1.8;
@@ -325,8 +377,15 @@ function buildParticles() {
   scratch = [];
   for (let s = 0; s < ASTEPS; s++) scratch.push(new Float32Array(Math.max(3, maxG * 3)));
 
-  textParts = particles.filter((p) => p.tx != null && !p.bright);
-  textPartsHi = particles.filter((p) => p.tx != null && p.bright);
+  /* Split the name's shards into vertical bands so the gradient and its sheen
+     can be applied with one fill per band rather than per shard. */
+  nameBands = Array.from({ length: NAME_BANDS }, () => []);
+  for (const p of particles) {
+    if (p.tx == null) continue;
+    const u = (p.tx - nameLeft) / nameW;
+    const b = Math.min(NAME_BANDS - 1, Math.max(0, Math.floor(u * NAME_BANDS)));
+    nameBands[b].push(p);
+  }
   extraParts = particles.filter((p) => p.tx == null);
   return true;
 }
@@ -362,6 +421,77 @@ function buildBg() {
   grainPat = ctx.createPattern(n, 'repeat');
 }
 
+/* ------------------------------------------------------------------ flame
+   A golden flame at the foot of the frame, which the embers now rise out of --
+   until now they drifted up from nothing. One teardrop sprite is rendered once
+   and stamped a dozen times per frame at wobbling sizes, so the whole thing
+   costs a handful of drawImage calls rather than a gradient per tongue. */
+let flameSprite = null, tongues = [];
+
+function buildFlame() {
+  if (!flameSprite) {
+    const SW = 160, SH = 400;
+    flameSprite = document.createElement('canvas');
+    flameSprite.width = SW; flameSprite.height = SH;
+    const fx = flameSprite.getContext('2d');
+    const id = fx.createImageData(SW, SH);
+    for (let y = 0; y < SH; y++) {
+      const u = y / SH;                       // 0 at the tip, 1 at the base
+      // blunt, not triangular — a sharp taper reads as a candle, not a fire
+      const hw = (SW / 2) * Math.pow(u, 0.42) * (1 - 0.06 * u);
+      const body = Math.pow(u, 0.42) * Math.min(1, u / 0.06);
+      if (hw <= 0.01) continue;
+      for (let x = 0; x < SW; x++) {
+        const r = Math.abs(x - SW / 2) / hw;
+        if (r >= 1) continue;
+        // soft shoulder so overlapping tongues merge into one body
+        const a = Math.pow(1 - r * r, 1.15);
+        const i = (y * SW + x) * 4;
+        id.data[i] = 205 + 50 * a;                    // hot core -> amber edge
+        id.data[i + 1] = 95 + 140 * a * a;
+        id.data[i + 2] = 25 + 165 * Math.pow(a, 4);
+        id.data[i + 3] = Math.round(235 * a * body);
+      }
+    }
+    fx.putImageData(id, 0, 0);
+  }
+  /* A wide low bed plus two broad swells give the fire a single body; the licks
+     on top are clustered toward the middle by a triangular distribution, so it
+     reads as one flame rather than a row of them. */
+  const rnd = mulberry32(0x9E3779B9);
+  tongues = [
+    { x: 0, w: 1.5, h: 0.30, sp: 0.55, ph: 0.0, a: 0.42 },
+    { x: 0, w: 0.85, h: 0.62, sp: 0.70, ph: 1.3, a: 0.34 },
+    { x: 0, w: 0.50, h: 0.95, sp: 0.85, ph: 2.1, a: 0.30 },
+  ];
+  for (let k = 0, n = REDUCED ? 4 : 9; k < n; k++) tongues.push({
+    x: (rnd() + rnd() - 1) * 0.5, w: 0.16 + rnd() * 0.26, h: 0.45 + rnd() * 0.75,
+    sp: 1.0 + rnd() * 1.8, ph: rnd() * 6.28, a: 0.16 + rnd() * 0.24,
+  });
+}
+
+function drawFlame(t, prog) {
+  if (!flameSprite) return;
+  const fw = W * 0.40, fh = H * 0.46, cx = W / 2, baseY = H + fh * 0.04;
+  const boost = 1 + 0.45 * smooth(0, 0.3, prog);   // the fire catches as the card goes
+  const damp = REDUCED ? 0.35 : 1;
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < tongues.length; i++) {
+    const q = tongues[i];
+    const flick = 0.72 + damp * (0.28 * Math.sin(t * q.sp + q.ph) + 0.14 * Math.sin(t * q.sp * 2.7 + q.ph * 1.9));
+    const h = fh * q.h * flick * boost;
+    const w = fw * q.w * (0.90 + damp * 0.14 * Math.sin(t * q.sp * 1.6 + q.ph));
+    const x = cx + q.x * fw + damp * Math.sin(t * 0.7 + q.ph) * fw * 0.05;
+    ctx.globalAlpha = q.a * (0.74 + 0.26 * flick);
+    ctx.drawImage(flameSprite, x - w / 2, baseY - h, w, h);
+  }
+  ctx.globalAlpha = 1;
+  const bl = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, fw * 0.95);
+  bl.addColorStop(0, `rgba(255,150,60,${0.26 * boost})`); bl.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = bl; ctx.fillRect(0, H - fh * 1.7, W, fh * 1.7 + 2);
+  ctx.globalCompositeOperation = 'source-over';
+}
+
 function drawBackground(t, dt) {
   ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
 
@@ -377,6 +507,8 @@ function drawBackground(t, dt) {
   ctx.fillStyle = cl; ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over';
 
+  drawFlame(t, prog);
+
   const drift = REDUCED ? 0.18 : 1;
   const k = dt * 60;
   ctx.fillStyle = 'rgba(160,160,170,0.12)';
@@ -390,7 +522,14 @@ function drawBackground(t, dt) {
   const px = (mx - 0.5) * 30;
   for (const e of embers) {
     e.y -= e.vy * k * drift; e.ph += 0.05 * k;
-    if (e.y < -6) { e.y = H + 6; e.x = Math.random() * W; }
+    // most embers are reborn in the flame, the rest anywhere, so the fire reads
+    // as their source without the field looking like it all funnels through it
+    if (e.y < -6) {
+      e.y = H + 6;
+      e.x = Math.random() < 0.62
+        ? W / 2 + (Math.random() - 0.5) * W * 0.5
+        : Math.random() * W;
+    }
     const x = e.x + Math.sin(e.ph) * 10 + px * (0.3 + e.z);
     const flick = 0.45 + 0.55 * Math.sin(t * 3 + e.ph * 3);
     const col = e.bright ? '255,205,120' : '255,150,70';
@@ -590,11 +729,20 @@ function drawParticles(prog, t) {
       ctx.fill();
     };
     const nameAlpha = DUST_FLOOR + (1 - DUST_FLOOR) * rp;
-    // the brighter grains only separate out once they are gathering
-    const hi = smooth(0, 0.35, rp);
-    const hiCss = `rgb(255,${Math.round(175 + 35 * hi)},${Math.round(95 + 35 * hi)})`;
-    drawTo(textParts, GOLD, nameAlpha, false);
-    drawTo(textPartsHi, hiCss, nameAlpha, false);
+    /* The gradient emerges as the shards gather: at rp 0 every band is the flat
+       gold the dissolve ended on, so the hand-off stays seamless, and by the
+       time the name is legible it carries the wordmark's full sweep. */
+    const g = smooth(0, 0.45, rp);
+    const phase = (t / SHEEN_SEC) * LUT_N;
+    for (let i = 0; i < NAME_BANDS; i++) {
+      const band = nameBands[i];
+      if (!band || !band.length) continue;
+      const c = goldLUT[(((phase + i * (LUT_N / 2 / NAME_BANDS)) | 0) % LUT_N + LUT_N) % LUT_N];
+      const cr = Math.round(255 + (c[0] - 255) * g);
+      const cg = Math.round(175 + (c[1] - 175) * g);
+      const cb = Math.round(95 + (c[2] - 95) * g);
+      drawTo(band, `rgb(${cr},${cg},${cb})`, nameAlpha, false);
+    }
     drawTo(extraParts, GOLD, DUST_FLOOR * (1 - rp), true);   // strays drift up and fade
   }
 
@@ -760,6 +908,7 @@ function resize() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   buildParticles();
   buildBg();
+  buildFlame();
   buildVidLayer();
   lastW = W; lastH = H;
 }
