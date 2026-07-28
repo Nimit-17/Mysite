@@ -470,10 +470,21 @@ function buildFlame() {
   });
 }
 
+/* Ignition. The flame does not exist during the intro — it catches only once the
+   video has handed over and the card can be scrolled, then climbs from nothing
+   over a few seconds rather than appearing already burning. */
+let flameLit = 0;
+const FLAME_IGNITE = 4.5;                        // seconds from spark to full height
+
 function drawFlame(t, prog) {
-  if (!flameSprite) return;
+  if (!flameSprite || flameLit <= 0.002) return;
+  const lit = flameLit;
   const fw = W * 0.40, fh = H * 0.46, cx = W / 2, baseY = H + fh * 0.04;
-  const boost = 1 + 0.45 * smooth(0, 0.3, prog);   // the fire catches as the card goes
+  // grows as it catches, then again as the card goes
+  const boost = lit * (1 + 0.45 * smooth(0, 0.3, prog));
+  /* Brightness runs ahead of height, so it reads as a small flame taking hold
+     and climbing rather than a dim smear slowly resolving into fire. */
+  const fade = Math.pow(lit, 0.4);
   const damp = REDUCED ? 0.35 : 1;
   ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < tongues.length; i++) {
@@ -482,11 +493,11 @@ function drawFlame(t, prog) {
     const h = fh * q.h * flick * boost;
     const w = fw * q.w * (0.90 + damp * 0.14 * Math.sin(t * q.sp * 1.6 + q.ph));
     const x = cx + q.x * fw + damp * Math.sin(t * 0.7 + q.ph) * fw * 0.05;
-    ctx.globalAlpha = q.a * (0.74 + 0.26 * flick);
+    ctx.globalAlpha = q.a * (0.74 + 0.26 * flick) * fade;
     ctx.drawImage(flameSprite, x - w / 2, baseY - h, w, h);
   }
   ctx.globalAlpha = 1;
-  const bl = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, fw * 0.95);
+  const bl = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, fw * 0.95 * (0.4 + 0.6 * lit));
   bl.addColorStop(0, `rgba(255,150,60,${0.26 * boost})`); bl.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = bl; ctx.fillRect(0, H - fh * 1.7, W, fh * 1.7 + 2);
   ctx.globalCompositeOperation = 'source-over';
@@ -526,7 +537,7 @@ function drawBackground(t, dt) {
     // as their source without the field looking like it all funnels through it
     if (e.y < -6) {
       e.y = H + 6;
-      e.x = Math.random() < 0.62
+      e.x = Math.random() < 0.62 * flameLit
         ? W / 2 + (Math.random() - 0.5) * W * 0.5
         : Math.random() * W;
     }
@@ -637,6 +648,33 @@ function drawEntrance(e) {
 function dirX(q) { return (q.hx / cardLayer.width) * 2 - 1; }
 function dirY(q) { return (q.hy / cardLayer.height) * 2 - 1; }
 
+/* The dust spells the name, then resolves into the real letterforms. Drawing the
+   baked outlines rather than leaving it as particles is what stops the wordmark
+   reading as pixelated at rest. The gradient is built from the same lookup table
+   the dust bands use, in font units so it rides the path's own transform. */
+function drawSolidName(alpha, t) {
+  if (!namePath || alpha <= 0.004) return;
+  const em = nameEm(W, H), s = em / NAME_UPEM;
+  const phase = (t / SHEEN_SEC) * LUT_N;
+  ctx.save();
+  ctx.setTransform(dpr * s, 0, 0, dpr * s,
+    dpr * (W / 2 - NAME_CX * s), dpr * (H / 2 - NAME_CY * s));
+  const g = ctx.createLinearGradient(NAME_BOX.x, 0, NAME_BOX.x + NAME_BOX.w, 0);
+  const STOPS = 24;
+  for (let i = 0; i <= STOPS; i++) {
+    const u = i / STOPS;
+    const c = goldLUT[(((phase + u * (LUT_N / 2)) | 0) % LUT_N + LUT_N) % LUT_N];
+    g.addColorStop(u, `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`);
+  }
+  ctx.globalAlpha = alpha;
+  ctx.shadowColor = 'rgba(255,160,60,0.34)';
+  ctx.shadowBlur = 260;                          // font units, so it scales with the type
+  ctx.shadowOffsetY = 80;
+  ctx.fillStyle = g;
+  ctx.fill(namePath);
+  ctx.restore();
+}
+
 function drawParticles(prog, t) {
   if (!cardCanvas) return;
   if (prog <= 0.004) { drawCard(1); return; }
@@ -671,7 +709,13 @@ function drawParticles(prog, t) {
   }
 
   const te = rp * rp * (3 - 2 * rp);
+  const solid = smooth(0.74, 0.94, prog);       // dust resolves into real letterforms
   const baseSz = cell * sc;
+  /* Laid down before the dust, not after. Drawn on top it replaced the additive
+     grains with partly-transparent type and the name visibly sagged in
+     brightness mid-crossfade; underneath, the dust simply settles onto letters
+     that are already forming. */
+  drawSolidName(solid, t);
   ctx.globalCompositeOperation = 'lighter';
 
   if (rp <= 0) {
@@ -728,7 +772,12 @@ function drawParticles(prog, t) {
       }
       ctx.fill();
     };
-    const nameAlpha = DUST_FLOOR + (1 - DUST_FLOOR) * rp;
+    /* The dust reaches full strength early and then clears quickly, rather than
+       still brightening while the type is already forming underneath. Measured
+       across the hand-off, that keeps the wordmark's brightness rising to a
+       small bloom and settling, instead of spiking and dipping. */
+    const nameAlpha = (DUST_FLOOR + (1 - DUST_FLOOR) * Math.min(1, rp / 0.5))
+      * Math.pow(1 - solid, 2);
     /* The gradient emerges as the shards gather: at rp 0 every band is the flat
        gold the dissolve ended on, so the hand-off stays seamless, and by the
        time the name is legible it carries the wordmark's full sweep. */
@@ -930,6 +979,8 @@ function frame(now) {
 
   // frame-rate independent: the old *0.12 per frame ran 2.4x faster at 144Hz
   prog += (target - prog) * (1 - Math.exp(-7.6 * dt));
+  // the fire catches the moment the card becomes scrollable, not before
+  if (state === 'card' && flameLit < 1) flameLit = Math.min(1, flameLit + dt / FLAME_IGNITE);
 
   drawBackground(t, dt);
   watchdog(now);

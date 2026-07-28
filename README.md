@@ -45,9 +45,18 @@ straight off the top edge, so the screen emptied before the name formed.
 
 ## The wordmark
 
-The name is spelled in dust, never set as type — that is the point of the piece.
-It is Cormorant Garamond Light, "Nimit" roman and *"Limbachiya"* italic, tracked
-`-0.035em`, carrying the seven-stop gold gradient on a 14s sheen.
+The dust spells the name and then resolves into the real letterforms, so the
+wordmark is crisp type at rest rather than a field of grains. It is Cormorant
+Garamond Light, "Nimit" roman and *"Limbachiya"* italic, tracked `-0.035em`,
+carrying the seven-stop gold gradient on a 14s sheen.
+
+The type is laid down *underneath* the dust, not over it. Drawn on top it
+replaced the additive grains with partly-transparent letterforms and the name
+visibly sagged in brightness halfway through the hand-off; underneath, the dust
+settles onto letters that are already forming. The dust also reaches full
+strength early (`rp / 0.5`) and then clears on a squared curve, so it isn't
+still brightening while the type is coming up. Measured across the band, the
+result rises to a small bloom and settles flat instead of spiking and dipping.
 
 The outlines are **baked to a path** (`NAME_D`) rather than loaded as a webfont.
 The string never changes, and outlines mean no network request, no FOUT, and no
@@ -65,10 +74,17 @@ readers and crawlers that the shards spell out visually.
 
 ## The flame
 
-A golden flame burns at the foot of the frame, and the embers are now reborn
-inside it rather than drifting up from nothing — 62% of them respawn within its
-width, the rest anywhere, so it reads as their source without the field looking
-like it funnels through a single point. It brightens as the card goes.
+A golden flame burns at the foot of the frame. It is **absent during the intro**
+and catches only when the video hands over and the card becomes scrollable,
+climbing from nothing over `FLAME_IGNITE` seconds — brightness running slightly
+ahead of height, so it reads as a small flame taking hold rather than a dim
+smear resolving into fire. It grows again as the card dissolves.
+
+The embers are reborn inside it rather than drifting up from nothing — 62% of
+them respawn within its width once it is lit, the rest anywhere, so it reads as
+their source without the field looking like it funnels through a single point.
+That bias is scaled by the ignition too, so nothing clusters at the centre while
+there is still no fire there.
 
 One teardrop sprite is generated once and stamped twelve times a frame at
 wobbling sizes, so the whole thing costs a handful of `drawImage` calls rather
