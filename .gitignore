@@ -11,3 +11,6 @@ node_modules/
 
 # personal source photos — kept locally, never published
 My site images/
+
+# source photo drops — the shipped versions live in assets/flying
+New images/

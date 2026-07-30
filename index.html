@@ -102,6 +102,24 @@
     width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%;
     border: 1px solid rgba(247,241,231,.5);
     box-shadow: 0 0 9px rgba(0,0,0,.34), inset 0 0 9px rgba(0,0,0,.22);
+    transition: width .26s cubic-bezier(.22,1,.36,1),
+                height .26s cubic-bezier(.22,1,.36,1),
+                margin .26s cubic-bezier(.22,1,.36,1),
+                border-color .26s ease, background-color .26s ease;
+  }
+  /* Over a card the ring opens up and takes on weight — the affordance the
+     printed "click to open" used to carry, moved onto the pointer where it
+     appears once and only where it applies. */
+  #curRing.hot {
+    width: 88px; height: 88px; margin: -44px 0 0 -44px;
+    border-color: rgba(247,241,231,.85);
+    background: rgba(247,241,231,.09);
+  }
+  #curLabel {
+    font: 500 9px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .3em; text-transform: uppercase;
+    color: rgba(247,241,231,.92); text-shadow: 0 0 8px rgba(0,0,0,.75);
+    margin: -4px 0 0 -18px; width: 36px; text-align: center;
   }
 
   #cardDetail {
@@ -239,6 +257,7 @@
   </div>
 
   <div id="curRing" class="cur" aria-hidden="true"></div>
+  <div id="curLabel" class="cur" aria-hidden="true">open</div>
   <div id="curDot" class="cur" aria-hidden="true"></div>
 
   <section id="cardDetail" role="dialog" aria-modal="true"
@@ -914,7 +933,8 @@ function drawBackground(t, dt) {
    which is where the stray default arrow was showing up. */
 const curDot = document.getElementById('curDot');
 const curRing = document.getElementById('curRing');
-let curX = 0, curY = 0, curLive = false;
+const curLabel = document.getElementById('curLabel');
+let curX = 0, curY = 0, curLive = false, curHot = false;
 
 const CUR_OK = !REDUCED && matchMedia('(hover: hover) and (pointer: fine)').matches;
 if (CUR_OK) document.documentElement.classList.add('nocur');
@@ -928,7 +948,20 @@ function moveCursor(dt) {
   const dx = tx - curX, dy = ty - curY;
   const lag = Math.min(1, Math.sqrt(dx * dx + dy * dy) / 90);
   curDot.style.transform = `translate3d(${tx}px,${ty}px,0)`;
-  curRing.style.transform = `translate3d(${curX}px,${curY}px,0) scale(${1 + 0.55 * lag})`;
+  /* The ring stops stretching while it is open over a card — the scale is there
+     to read as momentum, and momentum on top of the hover state just makes the
+     label wobble. */
+  const stretch = curHot ? 1 : 1 + 0.55 * lag;
+  curRing.style.transform = `translate3d(${curX}px,${curY}px,0) scale(${stretch})`;
+  curLabel.style.transform = `translate3d(${curX}px,${curY}px,0)`;
+
+  const hot = !detailOpen && state === 'card' && storm >= 0.62
+    && !!stormRenderer && stormRenderer.pick(mx, my) >= 0;
+  if (hot !== curHot) {
+    curHot = hot;
+    curRing.classList.toggle('hot', hot);
+    curLabel.classList.toggle('on', hot);
+  }
 }
 
 function post(now) {
@@ -1799,15 +1832,20 @@ function createStormRenderer(canvas) {
     'assets/story/06-maker.webp',
     'assets/story/07-coast.jpeg',
   ];
+  /* None of these appear on a card. A photograph that is both a card and a piece
+     of debris reads as the storm repeating itself rather than as a life with
+     more in it than fits on seven cards. Resized to a 1024px long edge — they
+     land in 512x341 atlas cells, so the full-resolution originals were decoding
+     roughly a hundred times the pixels they could ever show. */
   const photoImages = [
-    'assets/flying/01-brick.jpeg',
-    'assets/flying/02-black.jpeg',
-    'assets/flying/03-maker.jpeg',
-    'assets/flying/04-lego.jpg',
-    'assets/flying/05-pink.jpeg',
-    'assets/flying/06-night.jpeg',
-    'assets/flying/07-coast.jpeg',
-    'assets/flying/08-green.jpeg',
+    'assets/flying/01-cafe.webp',
+    'assets/flying/02-beach.webp',
+    'assets/flying/03-night.webp',
+    'assets/flying/04-garden.webp',
+    'assets/flying/05-pool.webp',
+    'assets/flying/06-red.webp',
+    'assets/flying/07-room.webp',
+    'assets/flying/08-rock.webp',
   ];
   const cardCopy = [
     ['NØ / 01', 'AER NVM', 'QEL VARO NIX TEM', 'QLX · ORO · VII'],
@@ -1825,21 +1863,125 @@ function createStormRenderer(canvas) {
     const sy = (img.naturalHeight - sh) * focusY;
     atlasCtx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
   };
+  /* Every photograph is composited onto the thing it is printed on before it
+     ever reaches the storm: a torn print, a frame of film, a half sheet.
+
+     The debris and the photographs used to be two unrelated systems flying in
+     the same air — empty scrolls tumbling past bare rectangles — and nothing was
+     ever *on* anything, which is precisely what made the pictures look pasted in
+     rather than caught up in it. Composited here, a flying photograph *is* a
+     torn print, and there is no seam between the prop and the picture. */
+  const cellRnd = (seed) => {
+    let a = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return () => { a = (a * 1103515245 + 12345) & 0x7fffffff; return a / 0x7fffffff; };
+  };
+
+  /* A deckled edge: walk the line while wandering off it, with the occasional
+     deeper bite so the tear is not uniformly ragged — evenly rough reads as a
+     texture, and it is the uneven bites that read as torn. */
+  const tornEdge = (c, x0, y0, x1, y1, amp, rnd, steps = 16) => {
+    const dx = x1 - x0, dy = y1 - y0;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    for (let s = 1; s <= steps; s++) {
+      const t = s / steps;
+      const off = (rnd() - 0.5) * amp * (rnd() < 0.16 ? 2.4 : 1);
+      c.lineTo(x0 + dx * t + nx * off, y0 + dy * t + ny * off);
+    }
+  };
+
+  const fitCover = (c, img, dx, dy, dw, dh, focusY = 0.42) => {
+    const s = Math.max(dw / img.naturalWidth, dh / img.naturalHeight);
+    const sw = dw / s, sh = dh / s;
+    c.drawImage(img, (img.naturalWidth - sw) * 0.5,
+      (img.naturalHeight - sh) * focusY, sw, sh, dx, dy, dw, dh);
+  };
+
+  /* Printed, not screen-lit: a warm cast and a corner falloff so a photograph
+     sits in the same firelight as everything else around it. */
+  const agePrint = (c, x, y, w, h) => {
+    c.save();
+    c.globalCompositeOperation = 'multiply';
+    const g = c.createLinearGradient(x, y, x + w, y + h);
+    g.addColorStop(0, 'rgba(255,236,205,1)');
+    g.addColorStop(1, 'rgba(206,176,138,1)');
+    c.fillStyle = g; c.fillRect(x, y, w, h);
+    c.restore();
+  };
+
+  const PAPER = ['#ded0b2', '#e6d9bd', '#d7c8a8'];
   const paintPhotoCell = (i, img) => {
-    const x = (i % atlasCols) * atlasCellW;
-    const y = Math.floor(i / atlasCols) * atlasCellH;
-    photoCtx.clearRect(x, y, atlasCellW, atlasCellH);
-    if (!img) return;
-    const scale = Math.max(
-      atlasCellW / img.naturalWidth,
-      atlasCellH / img.naturalHeight
-    );
-    const sw = atlasCellW / scale;
-    const sh = atlasCellH / scale;
-    const sx = (img.naturalWidth - sw) * 0.5;
-    const sy = (img.naturalHeight - sh) * (i === 6 ? 0.18 : 0.43);
-    photoCtx.drawImage(img, sx, sy, sw, sh,
-      x, y, atlasCellW, atlasCellH);
+    const X = (i % atlasCols) * atlasCellW;
+    const Y = Math.floor(i / atlasCols) * atlasCellH;
+    const W = atlasCellW, H = atlasCellH;
+    photoCtx.save();
+    photoCtx.clearRect(X, Y, W, H);
+    if (!img) { photoCtx.restore(); return; }
+    const rnd = cellRnd(i + 11);
+    const paper = PAPER[i % PAPER.length];
+
+    if (i % 3 === 1) {
+      /* A frame of film. The gate carries the picture; the sprockets are punched
+         back out so light reads through them the way it does on a real strip. */
+      const sh = H * 0.80, top = Y + (H - sh) / 2;
+      photoCtx.fillStyle = '#15100b';
+      photoCtx.fillRect(X + 3, top, W - 6, sh);
+      const gx = X + 26, gy = top + sh * 0.20, gw = W - 52, gh = sh * 0.60;
+      photoCtx.save();
+      photoCtx.beginPath(); photoCtx.rect(gx, gy, gw, gh); photoCtx.clip();
+      fitCover(photoCtx, img, gx, gy, gw, gh);
+      agePrint(photoCtx, gx, gy, gw, gh);
+      photoCtx.restore();
+      photoCtx.strokeStyle = 'rgba(0,0,0,.55)';
+      photoCtx.lineWidth = 2;
+      photoCtx.strokeRect(gx, gy, gw, gh);
+      photoCtx.globalCompositeOperation = 'destination-out';
+      const holes = 9, hw = W / holes;
+      for (let k = 0; k < holes; k++) {
+        const hx = X + 8 + k * hw;
+        photoCtx.fillRect(hx, top + sh * 0.045, hw * 0.52, sh * 0.10);
+        photoCtx.fillRect(hx, top + sh * 0.855, hw * 0.52, sh * 0.10);
+      }
+    } else if (i % 3 === 2) {
+      /* A half sheet: the tear runs straight through the picture, so what
+         survives is part of a photograph rather than a whole small one. */
+      const m = 7;
+      photoCtx.beginPath();
+      photoCtx.moveTo(X + m, Y + m);
+      tornEdge(photoCtx, X + m, Y + m, X + W * 0.66, Y + m, 5, rnd, 10);
+      tornEdge(photoCtx, X + W * 0.66, Y + m, X + W * 0.47, Y + H - m, 13, rnd, 20);
+      tornEdge(photoCtx, X + W * 0.47, Y + H - m, X + m, Y + H - m, 5, rnd, 10);
+      photoCtx.closePath();
+      photoCtx.fillStyle = paper;
+      photoCtx.fill();
+      photoCtx.save();
+      photoCtx.clip();
+      fitCover(photoCtx, img, X + m + 5, Y + m + 5, W * 0.66, H - m * 2 - 10, 0.34);
+      agePrint(photoCtx, X, Y, W, H);
+      photoCtx.restore();
+    } else {
+      /* A print on a torn sheet, with a margin of paper left showing. */
+      const m = 8;
+      photoCtx.beginPath();
+      photoCtx.moveTo(X + m, Y + m);
+      tornEdge(photoCtx, X + m, Y + m, X + W - m, Y + m, 6, rnd);
+      tornEdge(photoCtx, X + W - m, Y + m, X + W - m, Y + H - m, 6, rnd, 11);
+      tornEdge(photoCtx, X + W - m, Y + H - m, X + m, Y + H - m, 6, rnd);
+      tornEdge(photoCtx, X + m, Y + H - m, X + m, Y + m, 6, rnd, 11);
+      photoCtx.closePath();
+      photoCtx.fillStyle = paper;
+      photoCtx.fill();
+      photoCtx.save();
+      photoCtx.clip();
+      const px = X + 20, py = Y + 17, pw = W - 40, ph = H - 52;
+      fitCover(photoCtx, img, px, py, pw, ph);
+      agePrint(photoCtx, px, py, pw, ph);
+      photoCtx.strokeStyle = 'rgba(60,44,28,.30)';
+      photoCtx.lineWidth = 1;
+      photoCtx.strokeRect(px + .5, py + .5, pw - 1, ph - 1);
+      photoCtx.restore();
+    }
+    photoCtx.restore();
   };
   const paintCell = (i, img) => {
     const x = (i % atlasCols) * atlasCellW;
@@ -1873,7 +2015,9 @@ function createStormRenderer(canvas) {
     atlasCtx.fillStyle = 'rgba(247, 235, 214, .70)';
     atlasCtx.font = '600 11px Arial, sans-serif';
     atlasCtx.fillText(cardCopy[i][3], x + 290, y + 268);
-    atlasCtx.fillText('CLICK TO OPEN', x + 290, y + 304);
+    /* No "click to open" printed on the card. Seven of them in a rotating ring
+       is the same instruction shouted seven times; the cursor says it instead,
+       once, and only where it applies. */
     atlasCtx.restore();
   };
   cardImages.forEach((src, i) => {
@@ -2011,11 +2155,24 @@ function createStormRenderer(canvas) {
       float id = aPhoto.w;
       float opened = smoothstep(0.40, 0.90, uProgress);
       float angle = aPhoto.x + uOrbit * (0.32 + aStyle.w * 0.012);
-      float radius = mix(0.72, aPhoto.z, opened);
       float wrappedY = mod(
         aPhoto.y + uLift * (0.56 + aStyle.w * 0.018) + 5.0,
         10.0
       ) - 5.0;
+      float cyc = (wrappedY + 5.0) / 10.0;
+
+      float radius = mix(0.72, aPhoto.z, opened);
+      /* A funnel is a cone, not a tube. Orbiting every piece at the same radius
+         whatever its height is what kept the debris in two vertical bands with
+         the outer thirds of a wide frame left empty. */
+      radius *= mix(0.58, 1.52, cyc);
+
+      /* And some of it breaks orbit. The bulge is a half sine over the piece's
+         own rise, so it is at zero when the column wraps it back to the bottom
+         and there is nothing to see snap. */
+      float esc = step(2.5, mod(aStyle.w, 5.0));
+      radius += esc * sin(cyc * 3.14159265) * 2.55;
+
       vec3 center = vec3(
         cos(angle) * radius,
         wrappedY,
@@ -2066,27 +2223,24 @@ function createStormRenderer(canvas) {
     varying float vShade;
 
     void main() {
-      vec2 p = vUv - 0.5;
-      vec2 q = abs(p) - vec2(0.475, 0.455);
-      float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.025;
-      if ((uCutout < 0.5 && d > 0.0) || vAlpha < 0.01) discard;
+      if (vAlpha < 0.01) discard;
       float col = mod(vId, 4.0);
       float row = floor(vId / 4.0);
       vec2 atlasUv = vec2(
         (col + vUv.x) / 4.0,
         (1.0 - row + vUv.y) / 2.0
       );
-      vec3 image = texture2D(uPhotos, atlasUv).rgb;
-      float keyedAlpha = smoothstep(0.018, 0.13,
-        max(max(image.r, image.g), image.b));
-      float materialAlpha = mix(1.0, keyedAlpha, uCutout);
-      vec3 warm = vec3(0.68, 0.49, 0.28);
-      float rim = smoothstep(-0.045, -0.005, d);
-      vec3 color = mix(image * vShade, warm, 0.055 * (1.0 - uCutout));
-      color = mix(color, vec3(0.90, 0.72, 0.48),
-        rim * 0.20 * (1.0 - uCutout));
-      gl_FragColor = vec4(color,
-        vAlpha * materialAlpha * mix(0.82, 0.98, rim));
+      vec4 tex = texture2D(uPhotos, atlasUv);
+      /* Debris is a photograph of paper on black, so it is keyed by luminance.
+         The photographs carry their own alpha now — they are composited onto
+         torn sheets and film in the atlas, and the shape of the tear is what
+         that alpha is. A rounded rectangle used to be forced over them here,
+         which is exactly why they read as rectangles. */
+      float keyed = smoothstep(0.018, 0.13,
+        max(max(tex.r, tex.g), tex.b));
+      float materialAlpha = mix(tex.a, keyed, uCutout);
+      if (vAlpha * materialAlpha < 0.012) discard;
+      gl_FragColor = vec4(tex.rgb * vShade, vAlpha * materialAlpha);
     }
   `;
   const cardVertex = `
@@ -2270,13 +2424,25 @@ function createStormRenderer(canvas) {
     [ 2.18,  2.35, 3.70, 2, .42, .54,  .28, 10],
     [-.86,   2.20, 4.20, 3, .62, .30, -.18, 11],
     [ 3.05,   .55, 4.90, 4, .66, .26,  .12, 12],
-    [-.12,    .30, 4.00, 5, .48, .40, -.22, 13],
+    [-.12,    .30, 4.00, 2, .48, .40, -.22, 13],
     [ 2.52, -1.70, 4.35, 6, .62, .28,  .18, 14],
     [-.68,  -2.10, 4.70, 7, .44, .56, -.10, 15],
     [ 2.92, -3.45, 5.10, 3, .58, .28,  .26, 16],
     [-.26,   3.05, 3.45, 4, .54, .24, -.30, 17],
-    [ 2.30,  -.45, 3.65, 5, .40, .34,  .16, 18],
+    [ 2.30,  -.45, 3.65, 6, .40, .34,  .16, 18],
     [-.95,  -3.60, 4.30, 0, .42, .52, -.14, 19],
+    /* An outer shell, orbiting wider and slower than the column proper. Twenty
+       pieces of debris cannot fill a frame this wide however far out they swing
+       — past a point the sides stay empty because there is simply nothing in
+       them, and the fix is more air traffic rather than a bigger radius. */
+    [ 1.10,  4.60, 5.60, 1, .46, .58,  .22, 20],
+    [ 4.20,  3.30, 6.10, 7, .50, .40, -.26, 21],
+    [ 1.72,  1.05, 5.85, 2, .44, .50,  .14, 22],
+    [ 4.85,  -.20, 5.40, 4, .58, .26, -.20, 23],
+    [ 1.35, -1.95, 6.25, 0, .48, .56,  .30, 24],
+    [ 4.05, -3.10, 5.70, 6, .52, .34, -.12, 25],
+    [  .55,  2.15, 6.60, 3, .54, .30,  .18, 26],
+    [ 5.40, -4.40, 5.95, 7, .40, .48, -.28, 27],
   ];
   const planeCorners = [
     [-1, -1], [1, -1], [1, 1],
