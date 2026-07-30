@@ -43,13 +43,52 @@ const UPEM = roman.unitsPerEm;
 
 const r1 = (n) => Math.round(n * 10) / 10;
 
+/* Re-encodes a command list as relative moves with integer coordinates.
+   Absolute tenths are what the wordmark uses and they are worth keeping there —
+   its outlines are sliced by string elsewhere, and the burn seam was verified
+   against them. For the aside none of that applies and the cost is absurd: it
+   renders at roughly 58px, where one font unit is 0.058px, so a tenth of a unit
+   is six thousandths of a pixel. Rounding to whole units is invisible, and
+   deltas between neighbouring points are one or two digits where absolutes out
+   at x=17000 are five. Repeated command letters are dropped too, which fonts
+   give plenty of, since outlines are long runs of quadratics.
+
+   Chained deltas must be measured from the *rounded* previous point, not the
+   true one, or the error accumulates along the path and the tail drifts. */
+function compactPath(cmds) {
+  let cx = 0, cy = 0, sx = 0, sy = 0, prev = '';
+  let out = '';
+  for (const c of cmds) {
+    if (c.cmd === 'Z') { out += 'z'; cx = sx; cy = sy; prev = ''; continue; }
+    const a = c.args;
+    let s = '';
+    let nx = cx, ny = cy;
+    // every pair in a command is relative to the point the command started at
+    for (let k = 0; k < a.length; k += 2) {
+      const qx = Math.round(a[k]), qy = Math.round(a[k + 1]);
+      const dx = qx - cx, dy = qy - cy;
+      s += (s === '' || dx < 0 ? '' : ' ') + dx;
+      s += (dy < 0 ? '' : ' ') + dy;
+      nx = qx; ny = qy;
+    }
+    const letter = { M: 'm', L: 'l', Q: 'q' }[c.cmd];
+    /* `m` never merges: extra pairs after a moveto are implicit linetos, which
+       would silently redraw the glyph. */
+    if (letter === prev && letter !== 'm') out += (s[0] === '-' ? '' : ' ') + s;
+    else { out += letter + s; prev = letter; }
+    cx = nx; cy = ny;
+    if (c.cmd === 'M') { sx = cx; sy = cy; }
+  }
+  return out;
+}
+
 /* Lays out a sequence of [font, text] runs and returns the path plus its metrics.
    `cursor0` seeds the pen, so a subset of a line can be re-emitted at exactly the
    x it occupies in the full line. */
 function layout(parts, trackingEm, cursor0 = 0) {
   const TRACK = trackingEm * UPEM;
   let cursor = cursor0;
-  const cmds = [];
+  const cmds = [], raw = [];
   const bbox = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
 
   for (const [font, text] of parts) {
@@ -64,8 +103,9 @@ function layout(parts, trackingEm, cursor0 = 0) {
           bbox.x0 = Math.min(bbox.x0, a[k]); bbox.x1 = Math.max(bbox.x1, a[k]);
           bbox.y0 = Math.min(bbox.y0, a[k + 1]); bbox.y1 = Math.max(bbox.y1, a[k + 1]);
         }
-        cmds.push({ moveTo: 'M', lineTo: 'L', quadraticCurveTo: 'Q', bezierCurveTo: 'C', closePath: 'Z' }[c.command]
-          + a.map(r1).join(' '));
+        const cmd = { moveTo: 'M', lineTo: 'L', quadraticCurveTo: 'Q', bezierCurveTo: 'C', closePath: 'Z' }[c.command];
+        raw.push({ cmd, args: a });
+        cmds.push(cmd + a.map(r1).join(' '));
       }
       cursor += run.positions[i].xAdvance + TRACK;
     }
@@ -73,6 +113,7 @@ function layout(parts, trackingEm, cursor0 = 0) {
 
   return {
     d: cmds.join('').replace(/([MLQCZ])\s+/g, '$1'),
+    dz: compactPath(raw),          // same outline, relative and integer
     box: { x: r1(bbox.x0), y: r1(bbox.y0), w: r1(bbox.x1 - bbox.x0), h: r1(bbox.y1 - bbox.y0) },
     advance: r1(cursor - TRACK - cursor0),
     end: cursor,
@@ -117,7 +158,7 @@ writeFileSync('namepath.json', JSON.stringify({
   first: { d: first.d, box: first.box, advance: first.advance },
   last: { d: last.d, box: last.box, advance: last.advance },
   hi: { d: hi.d, box: hi.box, advance: hi.advance },
-  note1: { d: note1.d, box: note1.box, advance: note1.advance },
-  note2: { d: note2.d, box: note2.box, advance: note2.advance },
+  note1: { d: note1.dz, box: note1.box, advance: note1.advance },
+  note2: { d: note2.dz, box: note2.box, advance: note2.advance },
 }, null, 1));
 console.error('written to namepath.json');
