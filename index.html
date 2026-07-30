@@ -104,10 +104,117 @@
     box-shadow: 0 0 9px rgba(0,0,0,.34), inset 0 0 9px rgba(0,0,0,.22);
   }
 
+  #cardDetail {
+    position: fixed; inset: 0; z-index: 40;
+    display: grid; place-items: center;
+    padding: clamp(16px, 4vw, 56px);
+    background: rgba(4, 4, 3, .76);
+    backdrop-filter: blur(20px) saturate(.82);
+    -webkit-backdrop-filter: blur(20px) saturate(.82);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity .32s ease, visibility .32s ease;
+  }
+  #cardDetail.open {
+    opacity: 1; visibility: visible; pointer-events: auto;
+  }
+  .detail-shell {
+    position: relative;
+    width: min(980px, 100%);
+    max-height: min(680px, calc(100vh - 32px));
+    overflow: auto;
+    display: grid;
+    grid-template-columns: minmax(260px, .82fr) minmax(330px, 1.18fr);
+    gap: clamp(28px, 5vw, 72px);
+    align-items: center;
+    padding: clamp(22px, 4vw, 52px);
+    border: 1px solid rgba(255, 244, 224, .42);
+    border-radius: 34px;
+    background: rgba(19, 18, 16, .94);
+    box-shadow:
+      0 34px 100px rgba(0, 0, 0, .68),
+      inset 0 1px 0 rgba(255, 255, 255, .24);
+    transform: translateY(22px) scale(.97);
+    transition: transform .42s cubic-bezier(.2,.8,.2,1);
+  }
+  #cardDetail.open .detail-shell { transform: translateY(0) scale(1); }
+  #detailImage {
+    display: block;
+    width: 100%;
+    max-height: 510px;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 244, 224, .28);
+    box-shadow: 0 20px 44px rgba(0,0,0,.38);
+    opacity: 1;
+    filter: none;
+  }
+  .detail-copy {
+    align-self: stretch;
+    display: flex; flex-direction: column; justify-content: center;
+    color: #f4ead9;
+  }
+  #detailIndex, #detailChars {
+    font: 600 10px/1.4 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .28em; text-transform: uppercase;
+    color: rgba(244, 234, 217, .56);
+  }
+  #detailTitle {
+    margin: 22px 0 26px;
+    font: 600 clamp(38px, 6vw, 76px)/.9 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -.055em;
+  }
+  #detailBody {
+    max-width: 48ch;
+    font: 400 clamp(14px, 1.5vw, 17px)/1.7 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .02em;
+    color: rgba(244, 234, 217, .76);
+  }
+  #detailChars {
+    margin-top: auto;
+    padding-top: 38px;
+    border-top: 1px solid rgba(255, 244, 224, .15);
+  }
+  #detailClose {
+    position: absolute; top: 20px; right: 22px;
+    padding: 9px 12px;
+    border: 1px solid rgba(255, 244, 224, .28);
+    border-radius: 999px;
+    background: rgba(7, 6, 5, .66);
+    color: rgba(255, 244, 224, .78);
+    font: 600 9px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .22em; text-transform: uppercase;
+  }
+  #detailClose:hover, #detailClose:focus-visible {
+    background: rgba(255, 244, 224, .94);
+    color: #17130f;
+    outline: none;
+  }
+
+  @media (max-width: 680px) {
+    #cardDetail { padding: 12px; }
+    .detail-shell {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      max-height: calc(100vh - 24px);
+      padding: 52px 18px 24px;
+      border-radius: 26px;
+    }
+    #detailImage {
+      width: min(72vw, 280px);
+      max-height: 330px;
+      margin: 0 auto;
+    }
+    #detailTitle { margin: 10px 0 16px; }
+    #detailChars { margin-top: 26px; padding-top: 20px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #spark { animation: none; opacity: .8 }
     #spark.ignite { animation: none; opacity: 0 }
     #cue.anim span { animation: none }
+    .detail-shell, #cardDetail { transition: none; }
   }
 </style>
 </head>
@@ -134,6 +241,20 @@
   <div id="curRing" class="cur" aria-hidden="true"></div>
   <div id="curDot" class="cur" aria-hidden="true"></div>
 
+  <section id="cardDetail" role="dialog" aria-modal="true"
+    aria-labelledby="detailTitle" aria-hidden="true">
+    <article class="detail-shell">
+      <button id="detailClose" type="button">Close</button>
+      <img id="detailImage" alt="">
+      <div class="detail-copy">
+        <p id="detailIndex"></p>
+        <h2 id="detailTitle"></h2>
+        <p id="detailBody"></p>
+        <p id="detailChars"></p>
+      </div>
+    </article>
+  </section>
+
 <script>
 'use strict';
 
@@ -149,6 +270,13 @@ const vid    = document.getElementById('intro');
 const pre    = document.getElementById('pre');
 const spark  = document.getElementById('spark');
 const cueEl  = document.getElementById('cue');
+const cardDetail = document.getElementById('cardDetail');
+const detailClose = document.getElementById('detailClose');
+const detailImage = document.getElementById('detailImage');
+const detailIndex = document.getElementById('detailIndex');
+const detailTitle = document.getElementById('detailTitle');
+const detailBody = document.getElementById('detailBody');
+const detailChars = document.getElementById('detailChars');
 
 /* ---------------------------------------------------------------- geometry
    card.png is 1053x1494, 24-bit, NO alpha: everything outside the card's
@@ -1627,6 +1755,169 @@ function createStormRenderer(canvas) {
   });
   if (!gl) return null;
 
+  /* Each card gets a real image and a small temporary typographic composition.
+     The atlas is built once in Canvas2D, then sampled by the 3D glass shader. */
+  const atlas = document.createElement('canvas');
+  const atlasCtx = atlas.getContext('2d');
+  const atlasCols = 4, atlasRows = 2;
+  const atlasCellW = 512, atlasCellH = 341;
+  atlas.width = atlasCols * atlasCellW;
+  atlas.height = atlasRows * atlasCellH;
+  const cardTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, cardTexture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const photoAtlas = document.createElement('canvas');
+  const photoCtx = photoAtlas.getContext('2d');
+  photoAtlas.width = atlasCols * atlasCellW;
+  photoAtlas.height = atlasRows * atlasCellH;
+  const photoTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const debrisTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, debrisTexture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
+    gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+  const cardImages = [
+    'assets/story/01-origin.webp',
+    'assets/story/02-racing.webp',
+    'assets/story/03-breach.webp',
+    'assets/story/04-cysec.webp',
+    'assets/story/05-after-hours.webp',
+    'assets/story/06-maker.webp',
+    'assets/story/07-coast.jpeg',
+  ];
+  const photoImages = [
+    'assets/flying/01-brick.jpeg',
+    'assets/flying/02-black.jpeg',
+    'assets/flying/03-maker.jpeg',
+    'assets/flying/04-lego.jpg',
+    'assets/flying/05-pink.jpeg',
+    'assets/flying/06-night.jpeg',
+    'assets/flying/07-coast.jpeg',
+    'assets/flying/08-green.jpeg',
+  ];
+  const cardCopy = [
+    ['NØ / 01', 'AER NVM', 'QEL VARO NIX TEM', 'QLX · ORO · VII'],
+    ['NØ / 02', 'VEX LUMA', 'ARC VENI RØ TAL', 'ARC · NIX · 017'],
+    ['NØ / 03', 'KRY PTA', 'MØD RYN EKO VAE', 'MØD · RYN · EKO'],
+    ['NØ / 04', 'CYR EON', 'HEX AVA LOR QIN', 'HEX · AVA · IX'],
+    ['NØ / 05', 'NOX VELA', 'ORA QNT VEL SYN', 'ORA · QNT · 05'],
+    ['NØ / 06', 'MAK R', 'PLY SYN ROK ETA', 'PLY · SYN · 404'],
+    ['NØ / 07', 'NIM IT', 'VIA ODD AER SOL', 'VIA · ODD · END'],
+  ];
+  const coverImage = (img, x, y, w, h, focusY = 0.43) => {
+    const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+    const sw = w / scale, sh = h / scale;
+    const sx = (img.naturalWidth - sw) * 0.5;
+    const sy = (img.naturalHeight - sh) * focusY;
+    atlasCtx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  };
+  const paintPhotoCell = (i, img) => {
+    const x = (i % atlasCols) * atlasCellW;
+    const y = Math.floor(i / atlasCols) * atlasCellH;
+    photoCtx.clearRect(x, y, atlasCellW, atlasCellH);
+    if (!img) return;
+    const scale = Math.max(
+      atlasCellW / img.naturalWidth,
+      atlasCellH / img.naturalHeight
+    );
+    const sw = atlasCellW / scale;
+    const sh = atlasCellH / scale;
+    const sx = (img.naturalWidth - sw) * 0.5;
+    const sy = (img.naturalHeight - sh) * (i === 6 ? 0.18 : 0.43);
+    photoCtx.drawImage(img, sx, sy, sw, sh,
+      x, y, atlasCellW, atlasCellH);
+  };
+  const paintCell = (i, img) => {
+    const x = (i % atlasCols) * atlasCellW;
+    const y = Math.floor(i / atlasCols) * atlasCellH;
+    atlasCtx.save();
+    atlasCtx.beginPath();
+    atlasCtx.rect(x, y, atlasCellW, atlasCellH);
+    atlasCtx.clip();
+    atlasCtx.fillStyle = '#0b0a09';
+    atlasCtx.fillRect(x, y, atlasCellW, atlasCellH);
+    const imageX = x + 14;
+    const imageY = y + 29;
+    const imageW = 244;
+    const imageH = 290;
+    if (img) coverImage(img, imageX, imageY, imageW, imageH,
+      i === 6 ? 0.18 : 0.43);
+    atlasCtx.strokeStyle = 'rgba(247, 235, 214, .24)';
+    atlasCtx.lineWidth = 1;
+    atlasCtx.strokeRect(imageX + .5, imageY + .5, imageW - 1, imageH - 1);
+    atlasCtx.fillStyle = 'rgba(8, 7, 6, .78)';
+    atlasCtx.fillRect(x + 270, y, atlasCellW - 270, atlasCellH);
+    atlasCtx.fillStyle = 'rgba(247, 235, 214, .92)';
+    atlasCtx.font = '600 14px Arial, sans-serif';
+    atlasCtx.letterSpacing = '2px';
+    atlasCtx.fillText(cardCopy[i][0], x + 26, y + 30);
+    atlasCtx.font = '700 31px Arial, sans-serif';
+    atlasCtx.fillText(cardCopy[i][1], x + 288, y + 112);
+    atlasCtx.fillStyle = 'rgba(247, 235, 214, .67)';
+    atlasCtx.font = '500 12px Arial, sans-serif';
+    atlasCtx.fillText(cardCopy[i][2], x + 290, y + 145);
+    atlasCtx.fillStyle = 'rgba(247, 235, 214, .70)';
+    atlasCtx.font = '600 11px Arial, sans-serif';
+    atlasCtx.fillText(cardCopy[i][3], x + 290, y + 268);
+    atlasCtx.fillText('CLICK TO OPEN', x + 290, y + 304);
+    atlasCtx.restore();
+  };
+  cardImages.forEach((src, i) => {
+    paintCell(i, null);
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      paintCell(i, image);
+      gl.bindTexture(gl.TEXTURE_2D, cardTexture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+        gl.UNSIGNED_BYTE, atlas);
+    };
+    image.src = src;
+  });
+  photoImages.forEach((src, i) => {
+    paintPhotoCell(i, null);
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      paintPhotoCell(i, image);
+      gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+        gl.UNSIGNED_BYTE, photoAtlas);
+    };
+    image.src = src;
+  });
+  const debrisImage = new Image();
+  debrisImage.decoding = 'async';
+  debrisImage.onload = () => {
+    gl.bindTexture(gl.TEXTURE_2D, debrisTexture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+      gl.UNSIGNED_BYTE, debrisImage);
+  };
+  debrisImage.src = 'assets/flying/tornado-debris-atlas.png';
+  gl.bindTexture(gl.TEXTURE_2D, cardTexture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+    gl.UNSIGNED_BYTE, atlas);
+  gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+    gl.UNSIGNED_BYTE, photoAtlas);
+
   const vertex = `
     precision highp float;
     attribute vec4 aSeed;
@@ -1701,6 +1992,103 @@ function createStormRenderer(canvas) {
       gl_FragColor = vec4(color, alpha);
     }
   `;
+  const photoVertex = `
+    precision highp float;
+    attribute vec2 aCorner;
+    attribute vec4 aPhoto;
+    attribute vec4 aStyle;
+    uniform float uProgress;
+    uniform float uOrbit;
+    uniform float uLift;
+    uniform float uAspect;
+    uniform float uScale;
+    varying vec2 vUv;
+    varying float vAlpha;
+    varying float vId;
+    varying float vShade;
+
+    void main() {
+      float id = aPhoto.w;
+      float opened = smoothstep(0.40, 0.90, uProgress);
+      float angle = aPhoto.x + uOrbit * (0.32 + aStyle.w * 0.012);
+      float radius = mix(0.72, aPhoto.z, opened);
+      float wrappedY = mod(
+        aPhoto.y + uLift * (0.56 + aStyle.w * 0.018) + 5.0,
+        10.0
+      ) - 5.0;
+      vec3 center = vec3(
+        cos(angle) * radius,
+        wrappedY,
+        sin(angle) * radius
+      );
+
+      float tilt = aStyle.z
+                 + sin(uOrbit * 0.42 + aStyle.w * 1.7) * 0.10;
+      vec3 axisX = vec3(cos(tilt), sin(tilt), 0.0);
+      vec3 axisY = vec3(-sin(tilt), cos(tilt), 0.0);
+      float scaleIn = mix(0.38, 1.0, opened);
+      vec3 world = center
+                 + axisX * (aCorner.x * aStyle.x * scaleIn * uScale)
+                 + axisY * (aCorner.y * aStyle.y * scaleIn * uScale);
+
+      float depth = max(1.35, 6.1 - world.z);
+      float perspective = 2.40 / depth;
+      vec2 screen = vec2(world.x * perspective / uAspect,
+                         world.y * perspective);
+      gl_Position = vec4(screen, 0.0, 1.0);
+
+      float centerDepth = max(1.35, 6.1 - center.z);
+      float centerPerspective = 2.40 / centerDepth;
+      float centerX = center.x * centerPerspective / uAspect;
+      float edgeField = smoothstep(0.16, 0.44, abs(centerX));
+      float entry = smoothstep(0.08 + mod(id, 3.0) * 0.035,
+                               0.30 + mod(id, 3.0) * 0.035,
+                               uProgress);
+      float portraitDensity = mix(0.30, 1.0,
+        smoothstep(0.62, 0.95, uAspect));
+      float denseGroup = mix(1.0, portraitDensity,
+        step(7.5, aStyle.w));
+      vUv = aCorner * 0.5 + 0.5;
+      vAlpha = entry * edgeField
+             * clamp(1.52 - depth * 0.050, 0.48, 0.96)
+             * denseGroup;
+      vId = id;
+      vShade = clamp(0.91 + center.z * 0.025, 0.82, 1.05);
+    }
+  `;
+  const photoFragment = `
+    precision highp float;
+    uniform sampler2D uPhotos;
+    uniform float uCutout;
+    varying vec2 vUv;
+    varying float vAlpha;
+    varying float vId;
+    varying float vShade;
+
+    void main() {
+      vec2 p = vUv - 0.5;
+      vec2 q = abs(p) - vec2(0.475, 0.455);
+      float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.025;
+      if ((uCutout < 0.5 && d > 0.0) || vAlpha < 0.01) discard;
+      float col = mod(vId, 4.0);
+      float row = floor(vId / 4.0);
+      vec2 atlasUv = vec2(
+        (col + vUv.x) / 4.0,
+        (1.0 - row + vUv.y) / 2.0
+      );
+      vec3 image = texture2D(uPhotos, atlasUv).rgb;
+      float keyedAlpha = smoothstep(0.018, 0.13,
+        max(max(image.r, image.g), image.b));
+      float materialAlpha = mix(1.0, keyedAlpha, uCutout);
+      vec3 warm = vec3(0.68, 0.49, 0.28);
+      float rim = smoothstep(-0.045, -0.005, d);
+      vec3 color = mix(image * vShade, warm, 0.055 * (1.0 - uCutout));
+      color = mix(color, vec3(0.90, 0.72, 0.48),
+        rim * 0.20 * (1.0 - uCutout));
+      gl_FragColor = vec4(color,
+        vAlpha * materialAlpha * mix(0.82, 0.98, rim));
+    }
+  `;
   const cardVertex = `
     precision highp float;
     attribute vec2 aCorner;
@@ -1710,9 +2098,13 @@ function createStormRenderer(canvas) {
     uniform float uLift;
     uniform float uTravel;
     uniform float uAspect;
+    uniform float uHoverId;
+    uniform float uHover;
     varying vec2 vUv;
     varying float vAlpha;
     varying float vLight;
+    varying float vId;
+    varying float vHover;
 
     void main() {
       float id = aCard.w;
@@ -1725,10 +2117,13 @@ function createStormRenderer(canvas) {
       float radius = mix(0.34, aCard.z, smoothstep(0.46, 0.94, uProgress));
       vec3 center = vec3(cos(angle) * radius, aCard.y + uLift, sin(angle) * radius);
       vec3 tangent = normalize(vec3(-sin(angle), 0.0, cos(angle)));
+      float hoverMask = 1.0 - smoothstep(0.08, 0.48, abs(id - uHoverId));
+      float hover = hoverMask * uHover;
+      center.z += hover * 0.20;
 
-      float portraitScale = mix(0.75, 1.0, smoothstep(0.48, 1.0, uAspect));
-      float cardW = 0.78 * portraitScale;
-      float cardH = 0.47 * portraitScale;
+      float portraitScale = mix(0.48, 1.0, smoothstep(0.60, 1.0, uAspect));
+      float cardW = 1.03 * portraitScale * (1.0 + hover * 0.048);
+      float cardH = 0.62 * portraitScale * (1.0 + hover * 0.048);
       vec3 world = center
                  + tangent * (aCorner.x * cardW)
                  + vec3(0.0, aCorner.y * cardH, 0.0);
@@ -1741,28 +2136,57 @@ function createStormRenderer(canvas) {
       vUv = aCorner * 0.5 + 0.5;
       vAlpha = enter * clamp(1.56 - depth * 0.105, 0.42, 1.0);
       vLight = clamp(0.56 + center.z * 0.10 + abs(tangent.x) * 0.22, 0.36, 0.96);
+      vId = id;
+      vHover = hover;
     }
   `;
   const cardFragment = `
-    precision mediump float;
+    precision highp float;
+    uniform sampler2D uCards;
+    uniform float uOrbit;
     varying vec2 vUv;
     varying float vAlpha;
     varying float vLight;
+    varying float vId;
+    varying float vHover;
 
     void main() {
       vec2 p = vUv - 0.5;
-      vec2 q = abs(p) - vec2(0.455, 0.455);
-      float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.045;
+      vec2 q = abs(p) - vec2(0.442, 0.415);
+      float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.058;
       if (d > 0.0 || vAlpha < 0.01) discard;
 
-      float rim = smoothstep(-0.036, -0.006, d);
-      float inner = 1.0 - smoothstep(0.27, 0.50, length(p));
-      vec3 charcoal = vec3(0.025, 0.022, 0.020);
-      vec3 warmBlack = vec3(0.050, 0.041, 0.034);
-      vec3 fill = mix(charcoal, warmBlack, inner * 0.36 + vLight * 0.14);
-      vec3 edge = mix(vec3(0.40, 0.34, 0.28), vec3(0.74, 0.64, 0.51), vLight);
-      vec3 color = mix(fill, edge, rim * 0.80);
-      float alpha = vAlpha * mix(0.76, 0.96, rim);
+      float rim = smoothstep(-0.052, -0.006, d);
+      float innerRim = smoothstep(-0.115, -0.035, d)
+                     * (1.0 - smoothstep(-0.035, -0.004, d));
+      float col = mod(vId, 4.0);
+      float row = floor(vId / 4.0);
+      vec2 baseUv = vec2(1.0 - vUv.x, vUv.y);
+      vec2 liquid = vec2(
+        sin(baseUv.y * 13.0 + uOrbit + vId),
+        cos(baseUv.x * 11.0 - uOrbit * 0.7 + vId * 0.4)
+      ) * (0.004 + rim * 0.008);
+      vec2 localUv = clamp(baseUv + liquid, 0.012, 0.988);
+      vec2 atlasUv = vec2(
+        (col + localUv.x) / 4.0,
+        (1.0 - row + localUv.y) / 2.0
+      );
+      vec3 image = texture2D(uCards, atlasUv).rgb;
+      float imageRegion = 1.0 - smoothstep(0.47, 0.53, baseUv.x);
+      float sheen = smoothstep(0.84, 0.24,
+        length(vUv - vec2(0.25, 0.82))) * 0.12;
+      float caustic = pow(max(0.0,
+        sin(vUv.x * 8.0 + vUv.y * 5.0 + uOrbit + vId)), 8.0) * 0.11;
+      vec3 glassTint = vec3(0.82, 0.88, 0.88);
+      float glassAmount = (0.08 + sheen + caustic)
+                        * mix(1.0, 0.24, imageRegion);
+      vec3 color = mix(image * (0.80 + vLight * 0.24), glassTint,
+        glassAmount);
+      color = mix(color, image * 1.10, imageRegion * 0.22);
+      vec3 edge = mix(vec3(0.68, 0.61, 0.52), vec3(1.0, 0.96, 0.87), vLight);
+      color = mix(color, edge, rim * 0.72 + innerRim * 0.16);
+      color += vHover * vec3(0.09, 0.08, 0.06);
+      float alpha = vAlpha * mix(0.88, 0.99, rim + vHover * 0.45);
       gl_FragColor = vec4(color, alpha);
     }
   `;
@@ -1772,7 +2196,8 @@ function createStormRenderer(canvas) {
     gl.shaderSource(s, source);
     gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      if (DEBUG) console.error('[storm shader]', gl.getShaderInfoLog(s));
+      const message = gl.getShaderInfoLog(s);
+      if (DEBUG) console.error('[storm shader]', message);
       gl.deleteShader(s);
       return null;
     }
@@ -1787,14 +2212,16 @@ function createStormRenderer(canvas) {
     gl.attachShader(built, fs);
     gl.linkProgram(built);
     if (!gl.getProgramParameter(built, gl.LINK_STATUS)) {
-      if (DEBUG) console.error(`[${label} program]`, gl.getProgramInfoLog(built));
+      const message = gl.getProgramInfoLog(built);
+      if (DEBUG) console.error(`[${label} program]`, message);
       return null;
     }
     return built;
   };
   const program = makeProgram(vertex, fragment, 'storm');
+  const photoProgram = makeProgram(photoVertex, photoFragment, 'photo');
   const cardProgram = makeProgram(cardVertex, cardFragment, 'card');
-  if (!program || !cardProgram) return null;
+  if (!program || !photoProgram || !cardProgram) return null;
 
   const coarse = matchMedia('(pointer: coarse)').matches;
   const count = REDUCED ? 2600 : (coarse ? 6500 : 14000);
@@ -1825,16 +2252,83 @@ function createStormRenderer(canvas) {
   const uAspect = gl.getUniformLocation(program, 'uAspect');
   const uDpr = gl.getUniformLocation(program, 'uDpr');
 
+  /* Eight unique photographs—each used once—ride the outer circulation.
+     A separate material layer supplies the paper and film-strip debris. */
+  const photoSpecs = [
+    [ 2.48,  3.00, 4.00, 0, .50, .32, -.18, 0],
+    [-.60,   3.20, 4.30, 1, .44, .29,  .12, 1],
+    [ 2.78,  1.50, 4.70, 2, .52, .34,  .10, 2],
+    [-.35,   1.70, 4.80, 3, .48, .32, -.12, 3],
+    [ 2.35, -1.00, 4.20, 4, .46, .30,  .16, 4],
+    [-.78,  -1.40, 4.40, 5, .50, .33, -.08, 5],
+    [ 2.95,  4.00, 5.00, 6, .40, .27, -.10, 6],
+    [-.15,  -2.80, 4.70, 7, .46, .30,  .18, 7],
+  ];
+  const debrisSpecs = [
+    [ 2.72,  3.80, 4.80, 0, .50, .60, -.24,  8],
+    [-.34,   4.10, 4.50, 1, .52, .62,  .20,  9],
+    [ 2.18,  2.35, 3.70, 2, .42, .54,  .28, 10],
+    [-.86,   2.20, 4.20, 3, .62, .30, -.18, 11],
+    [ 3.05,   .55, 4.90, 4, .66, .26,  .12, 12],
+    [-.12,    .30, 4.00, 5, .48, .40, -.22, 13],
+    [ 2.52, -1.70, 4.35, 6, .62, .28,  .18, 14],
+    [-.68,  -2.10, 4.70, 7, .44, .56, -.10, 15],
+    [ 2.92, -3.45, 5.10, 3, .58, .28,  .26, 16],
+    [-.26,   3.05, 3.45, 4, .54, .24, -.30, 17],
+    [ 2.30,  -.45, 3.65, 5, .40, .34,  .16, 18],
+    [-.95,  -3.60, 4.30, 0, .42, .52, -.14, 19],
+  ];
+  const planeCorners = [
+    [-1, -1], [1, -1], [1, 1],
+    [-1, -1], [1, 1], [-1, 1],
+  ];
+  const photoData = new Float32Array(
+    photoSpecs.length * planeCorners.length * 10
+  );
+  let photoOffset = 0;
+  for (const spec of photoSpecs) {
+    for (const corner of planeCorners) {
+      photoData[photoOffset++] = corner[0];
+      photoData[photoOffset++] = corner[1];
+      for (const value of spec) photoData[photoOffset++] = value;
+    }
+  }
+  const photoBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, photoBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, photoData, gl.STATIC_DRAW);
+  const debrisData = new Float32Array(
+    debrisSpecs.length * planeCorners.length * 10
+  );
+  let debrisOffset = 0;
+  for (const spec of debrisSpecs) {
+    for (const corner of planeCorners) {
+      debrisData[debrisOffset++] = corner[0];
+      debrisData[debrisOffset++] = corner[1];
+      for (const value of spec) debrisData[debrisOffset++] = value;
+    }
+  }
+  const debrisBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, debrisBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, debrisData, gl.STATIC_DRAW);
+  const photoStride = 10 * 4;
+  const photoCorner = gl.getAttribLocation(photoProgram, 'aCorner');
+  const photoMeta = gl.getAttribLocation(photoProgram, 'aPhoto');
+  const photoStyle = gl.getAttribLocation(photoProgram, 'aStyle');
+  const photoProgress = gl.getUniformLocation(photoProgram, 'uProgress');
+  const photoOrbit = gl.getUniformLocation(photoProgram, 'uOrbit');
+  const photoLift = gl.getUniformLocation(photoProgram, 'uLift');
+  const photoAspect = gl.getUniformLocation(photoProgram, 'uAspect');
+  const photoScale = gl.getUniformLocation(photoProgram, 'uScale');
+  const photoSampler = gl.getUniformLocation(photoProgram, 'uPhotos');
+  const photoCutout = gl.getUniformLocation(photoProgram, 'uCutout');
+
   /* Active Theory's work panels use one radius, one size, a 50-degree angular
      step and an even vertical step. This is the same ordered helix rather than
      the previous collection of independently placed panels. */
   const cardSpecs = Array.from({ length: 7 }, (_, i) => [
     -i * 0.872664626, 2.52 - i * 0.84, 2.55, i,
   ]);
-  const corners = [
-    [-1, -1], [1, -1], [1, 1],
-    [-1, -1], [1, 1], [-1, 1],
-  ];
+  const corners = planeCorners;
   const cardData = new Float32Array(cardSpecs.length * corners.length * 6);
   let cardOffset = 0;
   for (const spec of cardSpecs) {
@@ -1858,6 +2352,25 @@ function createStormRenderer(canvas) {
   const cardLift = gl.getUniformLocation(cardProgram, 'uLift');
   const cardTravel = gl.getUniformLocation(cardProgram, 'uTravel');
   const cardAspect = gl.getUniformLocation(cardProgram, 'uAspect');
+  const cardTextureUniform = gl.getUniformLocation(cardProgram, 'uCards');
+  const cardHoverId = gl.getUniformLocation(cardProgram, 'uHoverId');
+  const cardHover = gl.getUniformLocation(cardProgram, 'uHover');
+  let hoveredCard = 0;
+  let hoverAmount = 0;
+  let projectedCards = [];
+  const pickProjected = (nx, ny) => {
+    let picked = -1;
+    let pickedDepth = -999;
+    for (const card of projectedCards) {
+      if (Math.abs(nx - card.x) <= card.halfW
+          && Math.abs(ny - card.y) <= card.halfH
+          && card.z > pickedDepth) {
+        picked = card.id;
+        pickedDepth = card.z;
+      }
+    }
+    return picked;
+  };
 
   gl.disable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
@@ -1871,17 +2384,57 @@ function createStormRenderer(canvas) {
       canvas.style.height = height + 'px';
       gl.viewport(0, 0, canvas.width, canvas.height);
     },
+    pick(nx, ny) {
+      return pickProjected(nx, ny);
+    },
     draw(progress, travel) {
       gl.clear(gl.COLOR_BUFFER_BIT);
-      if (progress <= 0.001) return;
+      if (progress <= 0.001) {
+        projectedCards = [];
+        return;
+      }
 
       const aspect = Math.max(0.82, W / H);
       const cardViewportAspect = W / H;
       const windPhase = progress * 6.0 + travel * 8.0;
-      /* Formation ends looking at the second of the three opening cards.
-         The long travel then advances four equal 50-degree helix steps. */
-      const cardPhase = smooth(0.40, 0.82, progress) * 2.443460953
-                      + travel * 3.490658504;
+      const materialPhase = progress * 5.0 + travel * 6.2;
+      /* Formation now resolves on card one, exactly where card two used to
+         resolve. Travel then follows every remaining level of the helix. */
+      const cardPhase = smooth(0.40, 0.82, progress) * 1.570796327
+                      + travel * 5.235987756;
+      const lift = -2.52 + travel * 5.04;
+
+      /* Hit-test the projected cards so any readable surface can physically
+         lift toward the camera, not just the centered one. */
+      projectedCards = [];
+      const portraitScale = 0.48 + 0.52
+        * smooth(0.60, 1.0, cardViewportAspect);
+      const hitW = 1.03 * portraitScale;
+      const hitH = 0.62 * portraitScale;
+      for (let i = 0; i < cardSpecs.length; i++) {
+        const angle = cardSpecs[i][0] + cardPhase;
+        const z = Math.sin(angle) * cardSpecs[i][2];
+        const depth = Math.max(1.35, 6.1 - z);
+        const perspective = 2.40 / depth;
+        const sx = Math.cos(angle) * cardSpecs[i][2]
+          * perspective / cardViewportAspect * 0.5 + 0.5;
+        const sy = 0.5 - (cardSpecs[i][1] + lift) * perspective * 0.5;
+        const halfW = Math.max(0.025,
+          Math.abs(Math.sin(angle)) * hitW * perspective
+          / cardViewportAspect * 0.52);
+        const halfH = hitH * perspective * 0.52;
+        const earlyEnter = smooth(0.34 + i * 0.18, 0.46 + i * 0.18, progress);
+        const lateStart = 0.04 + (i - 3) * 0.22;
+        const lateEnter = smooth(lateStart, lateStart + 0.11, travel);
+        const enter = i < 3 ? earlyEnter : lateEnter;
+        if (enter > 0.08) {
+          projectedCards.push({ id: i, x: sx, y: sy, halfW, halfH, z });
+        }
+      }
+      const hoverCandidate = pickProjected(mx, my);
+      if (hoverCandidate >= 0) hoveredCard = hoverCandidate;
+      const hoverTarget = hoverCandidate >= 0 ? 1 : 0;
+      hoverAmount += (hoverTarget - hoverAmount) * 0.16;
 
       /* `uTime` deliberately comes from scroll progress rather than the wall
          clock, so the storm has no independent autoplay. */
@@ -1904,6 +2457,46 @@ function createStormRenderer(canvas) {
       gl.disableVertexAttribArray(aSeed);
       gl.disableVertexAttribArray(aLook);
 
+      /* Paper sheets, loose film and a film roll establish the material
+         tornado seen in the reference. They begin on the very first spin. */
+      gl.useProgram(photoProgram);
+      gl.bindBuffer(gl.ARRAY_BUFFER, debrisBuffer);
+      gl.enableVertexAttribArray(photoCorner);
+      gl.vertexAttribPointer(photoCorner, 2, gl.FLOAT, false, photoStride, 0);
+      gl.enableVertexAttribArray(photoMeta);
+      gl.vertexAttribPointer(photoMeta, 4, gl.FLOAT, false, photoStride, 2 * 4);
+      gl.enableVertexAttribArray(photoStyle);
+      gl.vertexAttribPointer(photoStyle, 4, gl.FLOAT, false, photoStride, 6 * 4);
+      gl.uniform1f(photoProgress, progress);
+      gl.uniform1f(photoOrbit, materialPhase);
+      gl.uniform1f(photoLift, travel * 3.5);
+      gl.uniform1f(photoAspect, cardViewportAspect);
+      gl.uniform1f(photoScale, 1.15);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, debrisTexture);
+      gl.uniform1i(photoSampler, 0);
+      gl.uniform1f(photoCutout, 1);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.drawArrays(gl.TRIANGLES, 0,
+        debrisSpecs.length * planeCorners.length);
+
+      /* Personal photographs share the vortex but remain distinct objects:
+         every reservoir image appears once and stays smaller than the frame. */
+      gl.bindBuffer(gl.ARRAY_BUFFER, photoBuffer);
+      gl.vertexAttribPointer(photoCorner, 2, gl.FLOAT, false, photoStride, 0);
+      gl.vertexAttribPointer(photoMeta, 4, gl.FLOAT, false, photoStride, 2 * 4);
+      gl.vertexAttribPointer(photoStyle, 4, gl.FLOAT, false, photoStride, 6 * 4);
+      gl.uniform1f(photoScale, 1.22);
+      gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+      gl.uniform1i(photoSampler, 0);
+      gl.uniform1f(photoCutout, 0);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.drawArrays(gl.TRIANGLES, 0,
+        photoSpecs.length * planeCorners.length);
+      gl.disableVertexAttribArray(photoCorner);
+      gl.disableVertexAttribArray(photoMeta);
+      gl.disableVertexAttribArray(photoStyle);
+
       /* The warm-black card surfaces are laid over the brightest air streaks
          so the intentionally empty shells still read as designed objects. */
       gl.useProgram(cardProgram);
@@ -1914,11 +2507,16 @@ function createStormRenderer(canvas) {
       gl.vertexAttribPointer(aCard, 4, gl.FLOAT, false, cardStride, 2 * 4);
       gl.uniform1f(cardProgress, progress);
       gl.uniform1f(cardOrbit, cardPhase);
-      gl.uniform1f(cardLift, -1.68 + travel * 3.36);
+      gl.uniform1f(cardLift, lift);
       gl.uniform1f(cardTravel, travel);
       /* Cards keep their 5:3 silhouette in portrait; only the atmospheric
          tornado uses the wider virtual portrait lens above. */
       gl.uniform1f(cardAspect, cardViewportAspect);
+      gl.uniform1f(cardHoverId, hoveredCard);
+      gl.uniform1f(cardHover, hoverAmount);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, cardTexture);
+      gl.uniform1i(cardTextureUniform, 0);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.drawArrays(gl.TRIANGLES, 0, cardSpecs.length * corners.length);
       gl.disableVertexAttribArray(aCorner);
@@ -1929,11 +2527,109 @@ function createStormRenderer(canvas) {
 
 const stormRenderer = createStormRenderer(stormStage);
 
+const detailData = [
+  {
+    image: 'assets/story/01-origin.webp',
+    index: 'NØ / 01 — AER NVM',
+    title: 'AER NVM',
+    body: 'Qel vara nox in the first archive. A small origin signal, held between brick, glass, and an unfinished thought. Varo nex talin; the rest is temporary language waiting for the real story.',
+    chars: 'QLX–07 / ORO–NVM / A13 · V7 · RØ',
+  },
+  {
+    image: 'assets/story/02-racing.webp',
+    index: 'NØ / 02 — VEX LUMA',
+    title: 'VEX LUMA',
+    body: 'Arc veni lumen across a fast frame. Ryn tal, vex ora, and a sequence of borrowed velocity—random words for now, keeping the space and rhythm ready for a sharper memory.',
+    chars: 'ARC–17 / NIX–VEX / L9 · Q2 · ÆR',
+  },
+  {
+    image: 'assets/story/03-breach.webp',
+    index: 'NØ / 03 — KRY PTA',
+    title: 'KRY PTA',
+    body: 'Mød ryn eko inside the workshop. A loud orange interval, a machine in motion, and placeholder fragments arranged like field notes: kry, vae, tal, and an unresolved line.',
+    chars: 'MØD–31 / EKO–KRY / X4 · T8 · VAE',
+  },
+  {
+    image: 'assets/story/04-cysec.webp',
+    index: 'NØ / 04 — CYR EON',
+    title: 'CYR EON',
+    body: 'Hex ava lor qin. This is temporary descriptive matter for a future chapter about curiosity, systems, and the urge to understand how things break before rebuilding them.',
+    chars: 'HEX–44 / CYR–EON / Q1 · N6 · IX',
+  },
+  {
+    image: 'assets/story/05-after-hours.webp',
+    index: 'NØ / 05 — NOX VELA',
+    title: 'NOX VELA',
+    body: 'Ora qnt vel syn after the lights change. A nocturnal note about making, wandering, and collecting strange visual signals—nox, vela, ryn, all standing in until the real copy arrives.',
+    chars: 'NOX–05 / VELA–ORA / S7 · Y2 · QNT',
+  },
+  {
+    image: 'assets/story/06-maker.webp',
+    index: 'NØ / 06 — MAK R',
+    title: 'MAK R',
+    body: 'Ply syn rok eta: a maker fragment with no final definition yet. The image is real; the language is deliberately synthetic, leaving enough room for the eventual story to breathe.',
+    chars: 'PLY–06 / SYN–MAK / R4 · K0 · ETA',
+  },
+  {
+    image: 'assets/story/07-coast.jpeg',
+    index: 'NØ / 07 — NIM IT',
+    title: 'NIM IT',
+    body: 'Via odd aer sol at the edge of the coast. A clear portrait, a quiet horizon, and one final temporary paragraph made from plausible noise until this card gets its actual ending.',
+    chars: 'VIA–07 / ODD–SOL / N1 · M7 · AER',
+  },
+];
+let detailOpen = false;
+let detailReturnFocus = null;
+
+function openCardDetail(id) {
+  const data = detailData[id];
+  if (!data) return;
+  detailOpen = true;
+  detailReturnFocus = document.activeElement;
+  detailImage.src = data.image;
+  detailImage.alt = `Nimit — ${data.title}`;
+  detailIndex.textContent = data.index;
+  detailTitle.textContent = data.title;
+  detailBody.textContent = data.body;
+  detailChars.textContent = data.chars;
+  cardDetail.classList.add('open');
+  cardDetail.setAttribute('aria-hidden', 'false');
+  showCue(false);
+  requestAnimationFrame(() => detailClose.focus());
+}
+
+function closeCardDetail() {
+  if (!detailOpen) return;
+  detailOpen = false;
+  cardDetail.classList.remove('open');
+  cardDetail.setAttribute('aria-hidden', 'true');
+  if (detailReturnFocus && typeof detailReturnFocus.focus === 'function') {
+    detailReturnFocus.focus();
+  }
+}
+
+detailClose.addEventListener('click', closeCardDetail);
+cardDetail.addEventListener('click', (event) => {
+  if (event.target === cardDetail) closeCardDetail();
+});
+addEventListener('click', (event) => {
+  if (detailOpen || cardDetail.contains(event.target)
+      || state !== 'card' || storm < 0.62 || !stormRenderer) return;
+  const picked = stormRenderer.pick(event.clientX / W, event.clientY / H);
+  if (picked >= 0) openCardDetail(picked);
+});
+addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && detailOpen) {
+    event.preventDefault();
+    closeCardDetail();
+  }
+});
+
 /* --------------------------------------------------------------- input */
 /* One monotonic timeline runs the whole piece. `prog` is the card and the name,
    `burn` is everything after — deriving both from one scroll position is what
    keeps the join between them from needing a handover at all. */
-const STORM_START = 2.32;
+const STORM_START = 2.12;
 const STORM_FORM_SPAN = 1.10;
 const STORM_TRAVEL_SPAN = 2.85;
 const TL_MAX = STORM_START + STORM_FORM_SPAN + STORM_TRAVEL_SPAN;
@@ -1943,7 +2639,7 @@ let target = 0, tl = 0, prog = 0, burn = 0, storm = 0, stormTravel = 0, lava = 0
 const LINE = 33, PAGE = 120, STEP = 0.085;
 
 function bump(d) {
-  if (state !== 'card') return;
+  if (state !== 'card' || detailOpen) return;
   target = Math.min(TL_MAX, Math.max(0, target + d));
   lastInput = performance.now();
 }
@@ -1955,7 +2651,11 @@ function wheelAmount(e) {
   return Math.max(-140, Math.min(140, d));      // one violent trackpad fling ≠ whole animation
 }
 
-addEventListener('wheel', (e) => { e.preventDefault(); bump(wheelAmount(e) * 0.0009); }, { passive: false });
+addEventListener('wheel', (e) => {
+  if (detailOpen) return;
+  e.preventDefault();
+  bump(wheelAmount(e) * 0.0009);
+}, { passive: false });
 addEventListener('pointermove', (e) => {
   mx = e.clientX / W; my = e.clientY / H;
   /* Only a real mouse gets it. A touch pointer has nothing to replace, and
@@ -1970,6 +2670,7 @@ addEventListener('pointermove', (e) => {
 let lastY = null;
 addEventListener('touchstart', (e) => { lastY = e.touches[0].clientY; }, { passive: true });
 addEventListener('touchmove', (e) => {
+  if (detailOpen) return;
   e.preventDefault();
   if (lastY != null) bump((lastY - e.touches[0].clientY) * 0.0016);
   lastY = e.touches[0].clientY;
@@ -1983,6 +2684,7 @@ const KEYS = {
   ArrowUp: -STEP, ArrowLeft: -STEP, PageUp: -STEP * 3,
 };
 addEventListener('keydown', (e) => {
+  if (detailOpen) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === 'Home') { e.preventDefault(); target = 0; lastInput = performance.now(); return; }
   if (e.key === 'End')  { e.preventDefault(); target = TL_MAX; lastInput = performance.now(); showCue(false); return; }
