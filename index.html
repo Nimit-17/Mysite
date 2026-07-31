@@ -1658,9 +1658,13 @@ function drawNote(k, t, dx = 0, dy = 0) {
     /* The gradient runs along the writing, and is tilted by the height of the
        line over its width — a slope, not a vertical cut. */
     const x0 = box.x, x1 = box.x + box.w, tilt = box.h * 0.5;
+    /* Enough stops that the writing edge is not quantised to them. The band is
+       0.055 of the line, so at 24 stops it spanned barely one and the pen
+       advanced in visible hops rather than a stroke. */
     const g = ctx.createLinearGradient(x0, tilt, x1, -tilt);
-    for (let i = 0; i <= 24; i++) {
-      const u = i / 24;
+    const STOPS = 72;
+    for (let i = 0; i <= STOPS; i++) {
+      const u = i / STOPS;
       const local = (from + u * span - wipe) / EDGE;   // where this stop sits
       const a = Math.min(1, Math.max(0, -local));
       g.addColorStop(u, `rgba(240,228,208,${(0.88 * a).toFixed(3)})`);
@@ -1805,8 +1809,12 @@ function createStormRenderer(canvas) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   const photoAtlas = document.createElement('canvas');
   const photoCtx = photoAtlas.getContext('2d');
-  photoAtlas.width = atlasCols * atlasCellW;
-  photoAtlas.height = atlasRows * atlasCellH;
+  /* The photograph atlas is deeper than the card atlas: everything in the storm
+     is a picture now, so it needs a cell for each one rather than the eight a
+     4x2 sheet gave. */
+  const photoCols = 4, photoRows = 4;
+  photoAtlas.width = photoCols * atlasCellW;
+  photoAtlas.height = photoRows * atlasCellH;
   const photoTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, photoTexture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -1837,6 +1845,13 @@ function createStormRenderer(canvas) {
      more in it than fits on seven cards. Resized to a 1024px long edge — they
      land in 512x341 atlas cells, so the full-resolution originals were decoding
      roughly a hundred times the pixels they could ever show. */
+  /* Nothing generic flies. Every piece of debris in the storm is one of these,
+     printed onto a torn sheet or a frame of film — the paper and the celluloid
+     are how a photograph gets to be airborne, not objects in their own right.
+
+     Sixteen cells, eleven photographs: the last five repeat, but on a different
+     medium and at a different crop, so a repeat reads as another print of the
+     same day rather than as the same object twice. */
   const photoImages = [
     'assets/flying/01-cafe.webp',
     'assets/flying/02-beach.webp',
@@ -1846,6 +1861,14 @@ function createStormRenderer(canvas) {
     'assets/flying/06-red.webp',
     'assets/flying/07-room.webp',
     'assets/flying/08-rock.webp',
+    'assets/flying/09-mirror.webp',
+    'assets/flying/10-shore.webp',
+    'assets/flying/11-dusk.webp',
+    'assets/flying/02-beach.webp',
+    'assets/flying/04-garden.webp',
+    'assets/flying/06-red.webp',
+    'assets/flying/08-rock.webp',
+    'assets/flying/10-shore.webp',
   ];
   const cardCopy = [
     ['NØ / 01', 'AER NVM', 'QEL VARO NIX TEM', 'QLX · ORO · VII'],
@@ -1911,9 +1934,12 @@ function createStormRenderer(canvas) {
 
   const PAPER = ['#ded0b2', '#e6d9bd', '#d7c8a8'];
   const paintPhotoCell = (i, img) => {
-    const X = (i % atlasCols) * atlasCellW;
-    const Y = Math.floor(i / atlasCols) * atlasCellH;
+    const X = (i % photoCols) * atlasCellW;
+    const Y = Math.floor(i / photoCols) * atlasCellH;
     const W = atlasCellW, H = atlasCellH;
+    // repeats of the same photograph are framed differently so they read as
+    // separate prints rather than as the same object passing twice
+    const focus = 0.30 + (i % 5) * 0.07;
     photoCtx.save();
     photoCtx.clearRect(X, Y, W, H);
     if (!img) { photoCtx.restore(); return; }
@@ -1929,7 +1955,7 @@ function createStormRenderer(canvas) {
       const gx = X + 26, gy = top + sh * 0.20, gw = W - 52, gh = sh * 0.60;
       photoCtx.save();
       photoCtx.beginPath(); photoCtx.rect(gx, gy, gw, gh); photoCtx.clip();
-      fitCover(photoCtx, img, gx, gy, gw, gh);
+      fitCover(photoCtx, img, gx, gy, gw, gh, focus);
       agePrint(photoCtx, gx, gy, gw, gh);
       photoCtx.restore();
       photoCtx.strokeStyle = 'rgba(0,0,0,.55)';
@@ -1956,7 +1982,7 @@ function createStormRenderer(canvas) {
       photoCtx.fill();
       photoCtx.save();
       photoCtx.clip();
-      fitCover(photoCtx, img, X + m + 5, Y + m + 5, W * 0.66, H - m * 2 - 10, 0.34);
+      fitCover(photoCtx, img, X + m + 5, Y + m + 5, W * 0.66, H - m * 2 - 10, focus);
       agePrint(photoCtx, X, Y, W, H);
       photoCtx.restore();
     } else {
@@ -1974,7 +2000,7 @@ function createStormRenderer(canvas) {
       photoCtx.save();
       photoCtx.clip();
       const px = X + 20, py = Y + 17, pw = W - 40, ph = H - 52;
-      fitCover(photoCtx, img, px, py, pw, ph);
+      fitCover(photoCtx, img, px, py, pw, ph, focus);
       agePrint(photoCtx, px, py, pw, ph);
       photoCtx.strokeStyle = 'rgba(60,44,28,.30)';
       photoCtx.lineWidth = 1;
@@ -2046,15 +2072,9 @@ function createStormRenderer(canvas) {
     };
     image.src = src;
   });
-  const debrisImage = new Image();
-  debrisImage.decoding = 'async';
-  debrisImage.onload = () => {
-    gl.bindTexture(gl.TEXTURE_2D, debrisTexture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-      gl.UNSIGNED_BYTE, debrisImage);
-  };
-  debrisImage.src = 'assets/flying/tornado-debris-atlas.png';
+  /* The stock scroll-and-film sheet is gone along with the 1.4MB it cost. The
+     media it supplied are drawn per cell in the photograph atlas now, torn and
+     sprocketed around the actual pictures. */
   gl.bindTexture(gl.TEXTURE_2D, cardTexture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
     gl.UNSIGNED_BYTE, atlas);
@@ -2083,9 +2103,12 @@ function createStormRenderer(canvas) {
       float reveal = 1.0 - smoothstep(grown - 0.10, grown + 0.12, abs(yn));
       float opened = smoothstep(0.30, 0.82, uProgress);
       float height01 = yn * 0.5 + 0.5;
-      float outer = smoothstep(0.82, 1.0, aLook.y);
+      /* Wind. A wider share of the field is atmosphere rather than column,
+         and it reaches much further out — the streaks are what stop the outer
+         thirds of a wide frame reading as absence rather than as air. */
+      float outer = smoothstep(0.58, 1.0, aLook.y);
       float funnel = 0.12 + 3.05 * pow(height01, 1.34);
-      float atmosphere = 2.15 + height01 * 1.05;
+      float atmosphere = 3.40 + height01 * 2.60;
       float profile = mix(funnel, atmosphere, outer);
       float radius = mix(0.025, aSeed.z * profile, opened);
       float angle = aSeed.x + yn * 8.5
@@ -2154,7 +2177,11 @@ function createStormRenderer(canvas) {
     void main() {
       float id = aPhoto.w;
       float opened = smoothstep(0.40, 0.90, uProgress);
-      float angle = aPhoto.x + uOrbit * (0.32 + aStyle.w * 0.012);
+      /* Differential rotation — the further out a piece orbits the slower it
+         goes round, which is both what a vortex actually does and what gives
+         the outer ring parallax against the column instead of racing it. */
+      float angle = aPhoto.x
+                  + uOrbit * (0.30 + aStyle.w * 0.009) * (4.2 / max(2.2, aPhoto.z));
       float wrappedY = mod(
         aPhoto.y + uLift * (0.56 + aStyle.w * 0.018) + 5.0,
         10.0
@@ -2228,7 +2255,7 @@ function createStormRenderer(canvas) {
       float row = floor(vId / 4.0);
       vec2 atlasUv = vec2(
         (col + vUv.x) / 4.0,
-        (1.0 - row + vUv.y) / 2.0
+        (3.0 - row + vUv.y) / 4.0
       );
       vec4 tex = texture2D(uPhotos, atlasUv);
       /* Debris is a photograph of paper on black, so it is keyed by luminance.
@@ -2419,30 +2446,30 @@ function createStormRenderer(canvas) {
     [-.15,  -2.80, 4.70, 7, .46, .30,  .18, 7],
   ];
   const debrisSpecs = [
-    [ 2.72,  3.80, 4.80, 0, .50, .60, -.24,  8],
-    [-.34,   4.10, 4.50, 1, .52, .62,  .20,  9],
-    [ 2.18,  2.35, 3.70, 2, .42, .54,  .28, 10],
-    [-.86,   2.20, 4.20, 3, .62, .30, -.18, 11],
-    [ 3.05,   .55, 4.90, 4, .66, .26,  .12, 12],
-    [-.12,    .30, 4.00, 2, .48, .40, -.22, 13],
-    [ 2.52, -1.70, 4.35, 6, .62, .28,  .18, 14],
-    [-.68,  -2.10, 4.70, 7, .44, .56, -.10, 15],
-    [ 2.92, -3.45, 5.10, 3, .58, .28,  .26, 16],
-    [-.26,   3.05, 3.45, 4, .54, .24, -.30, 17],
-    [ 2.30,  -.45, 3.65, 6, .40, .34,  .16, 18],
-    [-.95,  -3.60, 4.30, 0, .42, .52, -.14, 19],
+    [ 2.72,  3.80, 4.80, 4, .50, .60, -.24,  8],
+    [-.34,   4.10, 4.50, 6, .52, .62,  .20,  9],
+    [ 2.18,  2.35, 3.70, 8, .42, .54,  .28, 10],
+    [-.86,   2.20, 4.20, 9, .62, .30, -.18, 11],
+    [ 3.05,   .55, 4.90, 10, .66, .26,  .12, 12],
+    [-.12,    .30, 4.00, 11, .48, .40, -.22, 13],
+    [ 2.52, -1.70, 4.35, 12, .62, .28,  .18, 14],
+    [-.68,  -2.10, 4.70, 13, .44, .56, -.10, 15],
+    [ 2.92, -3.45, 5.10, 14, .58, .28,  .26, 16],
+    [-.26,   3.05, 3.45, 15, .54, .24, -.30, 17],
+    [ 2.30,  -.45, 3.65, 0, .40, .34,  .16, 18],
+    [-.95,  -3.60, 4.30, 2, .42, .52, -.14, 19],
     /* An outer shell, orbiting wider and slower than the column proper. Twenty
        pieces of debris cannot fill a frame this wide however far out they swing
        — past a point the sides stay empty because there is simply nothing in
        them, and the fix is more air traffic rather than a bigger radius. */
-    [ 1.10,  4.60, 5.60, 1, .46, .58,  .22, 20],
-    [ 4.20,  3.30, 6.10, 7, .50, .40, -.26, 21],
-    [ 1.72,  1.05, 5.85, 2, .44, .50,  .14, 22],
-    [ 4.85,  -.20, 5.40, 4, .58, .26, -.20, 23],
-    [ 1.35, -1.95, 6.25, 0, .48, .56,  .30, 24],
-    [ 4.05, -3.10, 5.70, 6, .52, .34, -.12, 25],
-    [  .55,  2.15, 6.60, 3, .54, .30,  .18, 26],
-    [ 5.40, -4.40, 5.95, 7, .40, .48, -.28, 27],
+    [ 1.10,  4.60, 8.30, 4, .46, .58,  .22, 20],
+    [ 4.20,  3.30, 9.10, 6, .50, .40, -.26, 21],
+    [ 1.72,  1.05, 8.70, 1, .44, .50,  .14, 22],
+    [ 4.85,  -.20, 7.90, 3, .58, .26, -.20, 23],
+    [ 1.35, -1.95, 9.40, 5, .48, .56,  .30, 24],
+    [ 4.05, -3.10, 8.50, 7, .52, .34, -.12, 25],
+    [  .55,  2.15, 9.80, 9, .54, .30,  .18, 26],
+    [ 5.40, -4.40, 8.90, 11, .40, .48, -.28, 27],
   ];
   const planeCorners = [
     [-1, -1], [1, -1], [1, 1],
@@ -2639,9 +2666,13 @@ function createStormRenderer(canvas) {
       gl.uniform1f(photoAspect, cardViewportAspect);
       gl.uniform1f(photoScale, 1.15);
       gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, debrisTexture);
+      /* Nothing generic flies any more. These quads used to sample a sheet of
+         stock scrolls and film; they sample the photograph atlas now, so the
+         paper and the celluloid only exist as the thing a picture is printed
+         on rather than as objects in their own right. */
+      gl.bindTexture(gl.TEXTURE_2D, photoTexture);
       gl.uniform1i(photoSampler, 0);
-      gl.uniform1f(photoCutout, 1);
+      gl.uniform1f(photoCutout, 0);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.drawArrays(gl.TRIANGLES, 0,
         debrisSpecs.length * planeCorners.length);
@@ -2795,7 +2826,11 @@ addEventListener('keydown', (event) => {
 /* One monotonic timeline runs the whole piece. `prog` is the card and the name,
    `burn` is everything after — deriving both from one scroll position is what
    keeps the join between them from needing a handover at all. */
-const STORM_START = 2.12;
+/* `burn` is clamped to STORM_START - 1, so this constant is also the ceiling the
+   third act has to finish under. The aside prints until burn 1.25; at 2.12 the
+   ceiling was 1.12 and the line could only ever reach 69% of itself, so its tail
+   never printed and instead snapped into place when the storm took over. */
+const STORM_START = 2.30;
 const STORM_FORM_SPAN = 1.10;
 const STORM_TRAVEL_SPAN = 2.85;
 const TL_MAX = STORM_START + STORM_FORM_SPAN + STORM_TRAVEL_SPAN;
